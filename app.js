@@ -175,6 +175,7 @@ function init() {
   renderAll();
   bindEvents();
   updateTitle();
+  initDice();
 }
 
 function renderAll() {
@@ -731,6 +732,14 @@ function bindEvents() {
       return;
     }
 
+    // Clear clock
+    if (el.matches('[data-clear-clock]')) {
+      state[el.dataset.clearClock] = 0;
+      saveState();
+      renderClock();
+      return;
+    }
+
     // Friend status
     if (el.matches('[data-friend-status]')) {
       const i = parseInt(el.dataset.friendStatus);
@@ -1029,6 +1038,258 @@ function printSheet() {
 // ── Utility ────────────────────────────
 function escHtml(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* ════════════════════════════════════════
+   DICE PHYSICS SYSTEM
+   ════════════════════════════════════════ */
+
+const DICE = {
+  dice: [],
+  container: null,
+  animFrame: null,
+  friction: 0.982,
+  bounce: 0.6,
+  minVelocity: 0.4,
+  dieSize: 54,
+  maxDice: 10,
+};
+
+const DIE_PATTERNS = {
+  1: [5],
+  2: [3, 7],
+  3: [3, 5, 7],
+  4: [1, 3, 7, 9],
+  5: [1, 3, 5, 7, 9],
+  6: [1, 3, 4, 6, 7, 9],
+};
+
+function initDice() {
+  DICE.container = document.getElementById('dice-container');
+  document.getElementById('btn-add-die').addEventListener('click', addDie);
+  document.getElementById('btn-remove-die').addEventListener('click', removeLastDie);
+}
+
+function addDie() {
+  if (DICE.dice.length >= DICE.maxDice) return;
+
+  const die = {
+    x: window.innerWidth / 2 - DICE.dieSize / 2 + (Math.random() - 0.5) * 80,
+    y: window.innerHeight / 2 - DICE.dieSize / 2 + (Math.random() - 0.5) * 80,
+    vx: 0,
+    vy: 0,
+    rotation: Math.random() * 360,
+    rotationSpeed: 0,
+    value: Math.ceil(Math.random() * 6),
+    settled: true,
+    dragging: false,
+    lastFaceChange: 0,
+    el: null,
+  };
+
+  const el = document.createElement('div');
+  el.className = 'die';
+  el.innerHTML = renderDieFace(die.value);
+  el.style.left = die.x + 'px';
+  el.style.top = die.y + 'px';
+  el.style.transform = 'rotate(' + die.rotation + 'deg)';
+  DICE.container.appendChild(el);
+  die.el = el;
+
+  setupDieDrag(die);
+  DICE.dice.push(die);
+}
+
+function removeLastDie() {
+  if (DICE.dice.length === 0) return;
+  const die = DICE.dice.pop();
+  die.el.remove();
+  if (DICE.dice.length === 0 && DICE.animFrame) {
+    cancelAnimationFrame(DICE.animFrame);
+    DICE.animFrame = null;
+  }
+}
+
+function renderDieFace(value) {
+  const dots = DIE_PATTERNS[value] || [];
+  let html = '<div class="die-face">';
+  for (let i = 1; i <= 9; i++) {
+    html += dots.includes(i)
+      ? '<span class="die-dot"></span>'
+      : '<span></span>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function setupDieDrag(die) {
+  let history = [];
+
+  function onDown(e) {
+    e.preventDefault();
+    die.dragging = true;
+    die.settled = false;
+    die.vx = 0;
+    die.vy = 0;
+    die.rotationSpeed = 0;
+    history = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
+    die.el.setPointerCapture(e.pointerId);
+    die.el.classList.add('grabbing');
+  }
+
+  function onMove(e) {
+    if (!die.dragging) return;
+    e.preventDefault();
+    die.x = e.clientX - DICE.dieSize / 2;
+    die.y = e.clientY - DICE.dieSize / 2;
+    die.el.style.left = die.x + 'px';
+    die.el.style.top = die.y + 'px';
+
+    history.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+    if (history.length > 6) history.shift();
+  }
+
+  function onUp(e) {
+    if (!die.dragging) return;
+    die.dragging = false;
+    die.el.classList.remove('grabbing');
+
+    // Calculate throw velocity from recent movement
+    if (history.length >= 2) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const dt = (last.t - first.t) / 1000; // seconds
+      if (dt > 0.001) {
+        const throwScale = 0.018;
+        const rawVx = (last.x - first.x) / dt;
+        const rawVy = (last.y - first.y) / dt;
+        die.vx = rawVx * throwScale;
+        die.vy = rawVy * throwScale;
+        die.rotationSpeed = (die.vx + die.vy) * 1.5;
+        die.settled = false;
+        // Randomize face on throw
+        die.value = Math.ceil(Math.random() * 6);
+        die.el.innerHTML = renderDieFace(die.value);
+      }
+    }
+
+    startPhysicsLoop();
+  }
+
+  die.el.addEventListener('pointerdown', onDown);
+  die.el.addEventListener('pointermove', onMove);
+  die.el.addEventListener('pointerup', onUp);
+  die.el.addEventListener('pointercancel', onUp);
+}
+
+let diceLastTime = 0;
+
+function dicePhysicsLoop(timestamp) {
+  if (!diceLastTime) diceLastTime = timestamp;
+  const rawDt = (timestamp - diceLastTime) / 16.67;
+  const dt = Math.min(rawDt, 3); // cap to avoid jumps
+  diceLastTime = timestamp;
+
+  let anyMoving = false;
+
+  const maxX = window.innerWidth - DICE.dieSize;
+  const maxY = window.innerHeight - DICE.dieSize;
+
+  for (const die of DICE.dice) {
+    if (die.dragging || die.settled) continue;
+
+    // Apply friction
+    const f = Math.pow(DICE.friction, dt);
+    die.vx *= f;
+    die.vy *= f;
+    die.rotationSpeed *= f;
+
+    // Update position
+    die.x += die.vx * dt;
+    die.y += die.vy * dt;
+    die.rotation += die.rotationSpeed * dt;
+
+    // Bounce off edges
+    let bounced = false;
+    if (die.x < 0) {
+      die.x = 0;
+      die.vx *= -DICE.bounce;
+      die.rotationSpeed *= -0.6;
+      bounced = true;
+    } else if (die.x > maxX) {
+      die.x = maxX;
+      die.vx *= -DICE.bounce;
+      die.rotationSpeed *= -0.6;
+      bounced = true;
+    }
+
+    if (die.y < 0) {
+      die.y = 0;
+      die.vy *= -DICE.bounce;
+      die.rotationSpeed *= -0.6;
+      bounced = true;
+    } else if (die.y > maxY) {
+      die.y = maxY;
+      die.vy *= -DICE.bounce;
+      die.rotationSpeed *= -0.6;
+      bounced = true;
+    }
+
+    // Re-roll face on bounce
+    if (bounced) {
+      die.value = Math.ceil(Math.random() * 6);
+      die.el.innerHTML = renderDieFace(die.value);
+      die.lastFaceChange = timestamp;
+    }
+
+    // Update DOM position
+    die.el.style.left = die.x + 'px';
+    die.el.style.top = die.y + 'px';
+    die.el.style.transform = 'rotate(' + die.rotation + 'deg)';
+
+    // Check speed
+    const speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
+
+    if (speed < DICE.minVelocity) {
+      // Settle
+      die.vx = 0;
+      die.vy = 0;
+      die.rotationSpeed = 0;
+      die.settled = true;
+      die.value = Math.ceil(Math.random() * 6);
+      die.el.innerHTML = renderDieFace(die.value);
+      // Snap rotation to nearest 90
+      die.rotation = Math.round(die.rotation / 90) * 90;
+      die.el.style.transform = 'rotate(' + die.rotation + 'deg)';
+    } else {
+      anyMoving = true;
+      // Animate face changes while rolling — slower changes as speed drops
+      let interval = 200;
+      if (speed > 15) interval = 50;
+      else if (speed > 8) interval = 80;
+      else if (speed > 3) interval = 130;
+
+      if (timestamp - die.lastFaceChange > interval) {
+        die.value = Math.ceil(Math.random() * 6);
+        die.el.innerHTML = renderDieFace(die.value);
+        die.lastFaceChange = timestamp;
+      }
+    }
+  }
+
+  if (anyMoving || DICE.dice.some(d => d.dragging)) {
+    DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
+  } else {
+    DICE.animFrame = null;
+    diceLastTime = 0;
+  }
+}
+
+function startPhysicsLoop() {
+  if (!DICE.animFrame) {
+    diceLastTime = 0;
+    DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
+  }
 }
 
 // ── Start ──────────────────────────────

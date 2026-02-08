@@ -194,6 +194,7 @@
                   <path d="M22,22 L22,42 A20,20 0 0,1 2,22 Z" class="clock-seg" data-seg="2"/>
                   <path d="M22,22 L2,22 A20,20 0 0,1 22,2 Z" class="clock-seg" data-seg="3"/>
                 </svg>
+                <button class="clear-btn" data-clear-clock="healingClock" title="Clear clock">&#x21bb;</button>
               </div>
               <div class="armor-group">
                 <label class="track-label">ARMOR</label>
@@ -685,6 +686,13 @@
     <input type="file" id="import-file" accept=".json" hidden>
   </div>
 
+</div>
+
+<!-- ═══════════ DICE OVERLAY ═══════════ -->
+<div id="dice-container"></div>
+<div class="dice-toolbar">
+  <button id="btn-add-die" title="Add a d6">+ d6</button>
+  <button id="btn-remove-die" title="Remove a d6">&minus; d6</button>
 </div>
 
 <script src="app.js"></script>

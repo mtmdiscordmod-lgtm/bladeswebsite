@@ -1367,6 +1367,88 @@ textarea {
   margin-top: 0.4rem;
 }
 
+/* ════════════════════════════════════════
+   DICE
+   ════════════════════════════════════════ */
+
+#dice-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.die {
+  position: fixed;
+  width: 54px;
+  height: 54px;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  pointer-events: auto;
+  z-index: 10000;
+  filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.35));
+  transition: filter 0.1s;
+}
+
+.die.grabbing {
+  cursor: grabbing;
+  filter: drop-shadow(4px 6px 10px rgba(0,0,0,0.5));
+  z-index: 10001;
+}
+
+.die-face {
+  width: 54px;
+  height: 54px;
+  background: #f5f0e6;
+  border: 2px solid #1a1a1a;
+  border-radius: 8px;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 7px;
+  box-sizing: border-box;
+}
+
+.die-dot {
+  width: 10px;
+  height: 10px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  align-self: center;
+  justify-self: center;
+}
+
+.dice-toolbar {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.4rem;
+  z-index: 10002;
+}
+
+.dice-toolbar button {
+  padding: 0.4rem 0.75rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  background: var(--sheet-bg);
+  cursor: pointer;
+  font-family: var(--font-title);
+  letter-spacing: 0.04em;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dice-toolbar button:hover {
+  background: var(--border);
+  color: var(--sheet-bg);
+}
+
 /* ── Print styles ── */
 @media print {
   body {
@@ -1396,6 +1478,10 @@ textarea {
   .item-remove,
   .faction-remove,
   .faction-clock-remove {
+    display: none;
+  }
+  #dice-container,
+  .dice-toolbar {
     display: none;
   }
 }
