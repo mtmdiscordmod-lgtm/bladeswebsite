@@ -1102,6 +1102,60 @@ textarea {
   line-height: 1.4;
 }
 
+/* ── Operation Type Tags ── */
+.opp-tags {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+}
+
+.opp-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.opp-tag--burglary {
+  background: #1b4965;
+  color: #fff;
+}
+
+.opp-tag--espionage {
+  background: #5a3e7a;
+  color: #fff;
+}
+
+.opp-tag--robbery {
+  background: #9c3a1a;
+  color: #fff;
+}
+
+.opp-tag--sabotage {
+  background: #6b2737;
+  color: #fff;
+}
+
+/* ── Lair Details ── */
+.lair-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lair-fields .field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lair-fields textarea {
+  min-height: 4rem;
+}
+
 /* ── Print styles ── */
 @media print {
   body {

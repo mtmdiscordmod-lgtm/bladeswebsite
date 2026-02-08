@@ -67,6 +67,11 @@ function defaultState() {
     crewAbility_slippery: false,
     crewAbility_synchronized: false,
 
+    // Lair details
+    lairName: '',
+    lairLocation: '',
+    lairNotes: '',
+
     // Shadows claims
     claim_interrogation_chamber: false,
     claim_turf_1: false,

@@ -414,6 +414,24 @@
       </div>
     </section>
 
+    <!-- ── Lair Details ── -->
+    <section class="section" data-collapsible>
+      <h2 class="section-head">LAIR DETAILS <span class="collapse-toggle">&#9660;</span></h2>
+      <div class="section-body">
+        <div class="lair-fields">
+          <div class="field">
+            <label>NAME</label>
+            <input type="text" data-field="lairName" placeholder="e.g. The Dusty Cellar">
+          </div>
+          <div class="field">
+            <label>LOCATION</label>
+            <input type="text" data-field="lairLocation" placeholder="e.g. Crow's Foot, under the old tannery">
+          </div>
+          <textarea data-field="lairNotes" rows="4" placeholder="Lair notes — describe your lair, defenses, hidden features, secret entrances..."></textarea>
+        </div>
+      </div>
+    </section>
+
     <div class="crew-body">
 
       <!-- Crew Left Column -->
@@ -533,30 +551,30 @@
       <div class="section-body">
         <table class="opp-table">
           <tbody>
-            <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight.</td></tr>
-            <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house.</td></tr>
-            <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is.</td></tr>
+            <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+            <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+            <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
           </tbody>
           <tbody>
             <tr class="opp-divider"><td colspan="2"></td></tr>
-            <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product.</td></tr>
-            <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador.</td></tr>
-            <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary.</td></tr>
+            <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+            <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+            <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
           </tbody>
           <tbody>
             <tr class="opp-divider"><td colspan="2"></td></tr>
-            <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial.</td></tr>
-            <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden.</td></tr>
-            <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet.</td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive?</td></tr>
+            <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+            <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+            <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive? <span class="opp-tags"><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
           </tbody>
         </table>
         <p class="opp-footer"><em>For any opportunity above, consider a Burglary, Espionage, Robbery or Sabotage operation. To twist an opportunity or add additional elements, roll on the score generator tables.</em></p>
