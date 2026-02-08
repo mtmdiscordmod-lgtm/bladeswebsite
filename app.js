@@ -8,11 +8,59 @@ const STORAGE_KEY = 'blades-character-sheet';
 // ── Default State ──────────────────────
 function defaultState() {
   return {
-    name: '', alias: '', crew: '', playbook: '', look: '',
+    name: '', alias: '', crew: 'Shadows', playbook: '', look: '',
     heritage: '', background: '',
     vice: '', vicePurveyor: '',
     specialAbilities: ['', '', '', '', '', '', '', ''],
     coin: 0, stash: 0,
+
+    // Crew: Shadows trackers
+    rep: 0, heat: 0, crewTier: 0, wantedLevel: 0, crewXp: 0,
+    hold: 'weak',
+    huntingGround: '',
+
+    // Shadows upgrades
+    upgrade_thiefRigging: false,
+    upgrade_undergroundMaps: false,
+    upgrade_eliteRooks: false,
+    upgrade_eliteSkulks: false,
+    upgrade_steady: false,
+
+    // Shadows crew abilities
+    crewAbility_everyoneSteals: false,
+    crewAbility_ghostEchoes: false,
+    crewAbility_packRats: false,
+    crewAbility_patron: false,
+    crewAbility_secondStory: false,
+    crewAbility_slippery: false,
+    crewAbility_synchronized: false,
+
+    // Shadows claims
+    claim_interrogation_chamber: false,
+    claim_turf_1: false,
+    claim_loyal_fence: false,
+    claim_gambling_den: false,
+    claim_tavern: false,
+    claim_drug_den: false,
+    claim_informants: false,
+    claim_lair: true,
+    claim_turf_2: false,
+    claim_lookouts: false,
+    claim_hagfish_farm: false,
+    claim_infirmary: false,
+    claim_covert_drop: false,
+    claim_turf_3: false,
+    claim_secret_pathways: false,
+
+    // Crew contacts
+    crewContacts: [
+      { name: 'Dowler, an explorer', status: 'neutral' },
+      { name: 'Laroze, a Bluecoat', status: 'neutral' },
+      { name: 'Amancio, a deal broker', status: 'neutral' },
+      { name: 'Fitz, a collector', status: 'neutral' },
+      { name: 'Adelaide Phroaig, a noble', status: 'neutral' },
+      { name: 'Rigney, a tavern owner', status: 'neutral' },
+    ],
     hunt: 0, study: 0, survey: 0, tinker: 0,
     finesse: 0, prowl: 0, skirmish: 0, wreck: 0,
     attune: 0, command: 0, consort: 0, sway: 0,
@@ -102,6 +150,8 @@ function renderAll() {
   renderItems();
   renderLoadLevel();
   updateLoadMeter();
+  renderCrewContacts();
+  renderClaims();
 }
 
 // ── Text Fields ────────────────────────
@@ -278,6 +328,36 @@ function updateLoadMeter() {
   if (meter) meter.classList.toggle('over', max > 0 && current > max);
 }
 
+// ── Crew Contacts ─────────────────────
+function renderCrewContacts() {
+  const list = document.getElementById('crew-contacts-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (state.crewContacts || []).forEach((contact, i) => {
+    const row = document.createElement('div');
+    row.className = 'friend-row';
+    const isClose = contact.status === 'close';
+    const isRival = contact.status === 'rival';
+    row.innerHTML = `
+      <span class="friend-status">
+        <button class="friend-status-btn ${isClose ? 'active' : ''}" data-crew-contact-status="${i}" data-status-val="close" title="Close">&#9650;</button>
+        <button class="friend-status-btn ${isRival ? 'active' : ''}" data-crew-contact-status="${i}" data-status-val="rival" title="Rival">&#9660;</button>
+      </span>
+      <input type="text" value="${escHtml(contact.name)}" data-crew-contact-index="${i}" placeholder="Contact name">
+      <button class="friend-remove" data-remove-crew-contact="${i}" title="Remove">&times;</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+// ── Claims Map ────────────────────────
+function renderClaims() {
+  document.querySelectorAll('.claim[data-claim]').forEach(el => {
+    const key = el.dataset.claim;
+    el.classList.toggle('claimed', !!state[key]);
+  });
+}
+
 // ── Event Binding ──────────────────────
 function bindEvents() {
   const sheet = document.querySelector('.sheet');
@@ -320,6 +400,13 @@ function bindEvents() {
       state.items[parseInt(el.dataset.itemLoad)].load = Math.max(0, parseInt(el.value) || 0);
       saveState();
       updateLoadMeter();
+      return;
+    }
+
+    // Crew contact name
+    if (el.matches('[data-crew-contact-index]')) {
+      state.crewContacts[parseInt(el.dataset.crewContactIndex)].name = el.value;
+      saveState();
       return;
     }
   });
@@ -455,6 +542,35 @@ function bindEvents() {
       return;
     }
 
+    // Claims toggle
+    if (el.matches('.claim[data-claim]') || el.closest('.claim[data-claim]')) {
+      const claimEl = el.matches('.claim[data-claim]') ? el : el.closest('.claim[data-claim]');
+      const key = claimEl.dataset.claim;
+      if (key === 'claim_lair') return; // Lair is always claimed
+      state[key] = !state[key];
+      saveState();
+      renderClaims();
+      return;
+    }
+
+    // Crew contact status
+    if (el.matches('[data-crew-contact-status]')) {
+      const i = parseInt(el.dataset.crewContactStatus);
+      const val = el.dataset.statusVal;
+      state.crewContacts[i].status = state.crewContacts[i].status === val ? 'neutral' : val;
+      saveState();
+      renderCrewContacts();
+      return;
+    }
+
+    // Remove crew contact
+    if (el.matches('[data-remove-crew-contact]')) {
+      state.crewContacts.splice(parseInt(el.dataset.removeCrewContact), 1);
+      saveState();
+      renderCrewContacts();
+      return;
+    }
+
     // Add buttons
     if (el.matches('[data-add="ability"]')) {
       state.specialAbilities.push('');
@@ -470,6 +586,14 @@ function bindEvents() {
       saveState();
       renderFriends();
       const inputs = document.querySelectorAll('#friends-list input[type="text"]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+      return;
+    }
+    if (el.matches('[data-add="crewContact"]')) {
+      state.crewContacts.push({ name: '', status: 'neutral' });
+      saveState();
+      renderCrewContacts();
+      const inputs = document.querySelectorAll('#crew-contacts-list input[type="text"]');
       if (inputs.length) inputs[inputs.length - 1].focus();
       return;
     }

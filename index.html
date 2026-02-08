@@ -319,6 +319,257 @@
     </div>
   </div>
 
+  <!-- ═══════════ CREW: SHADOWS ═══════════ -->
+  <div class="crew-section">
+
+    <div class="crew-section-header">
+      <h2 class="crew-title">SHADOWS</h2>
+      <p class="crew-subtitle"><em>Thieves and spies</em></p>
+      <p class="crew-xp-trigger">&#9670; <strong>XP Trigger:</strong> You earn xp when you execute a <strong>burglary</strong>, <strong>espionage</strong>, <strong>robbery</strong>, or <strong>sabotage</strong> operation.</p>
+    </div>
+
+    <!-- Crew Trackers -->
+    <div class="crew-trackers">
+      <div class="crew-trackers-col">
+        <div class="track-group">
+          <label class="track-label">REP <span class="track-value" data-display="rep">0</span>/12</label>
+          <div class="box-track" data-track="rep" data-max="12"></div>
+        </div>
+        <div class="track-group">
+          <label class="track-label">HEAT <span class="track-value" data-display="heat">0</span>/9</label>
+          <div class="box-track" data-track="heat" data-max="9"></div>
+        </div>
+        <div class="track-group crew-xp-group">
+          <label class="track-label">CREW XP</label>
+          <div class="xp-track" data-track="crewXp" data-max="8"></div>
+          <button class="clear-btn" data-clear="crewXp" title="Clear track">&#x21bb;</button>
+        </div>
+      </div>
+      <div class="crew-trackers-col">
+        <div class="track-group">
+          <label class="track-label">TIER</label>
+          <div class="box-track" data-track="crewTier" data-max="4"></div>
+        </div>
+        <div class="track-group">
+          <label class="track-label">HOLD</label>
+          <span class="options" data-field="hold">
+            <span class="option" data-value="strong">STRONG</span>
+            <span class="option" data-value="weak">WEAK</span>
+          </span>
+        </div>
+        <div class="track-group">
+          <label class="track-label">WANTED LEVEL</label>
+          <div class="box-track" data-track="wantedLevel" data-max="4"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crew-body">
+
+      <!-- Crew Left Column -->
+      <div class="crew-left">
+
+        <!-- Hunting Grounds -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">HUNTING GROUNDS <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <p class="section-note">Choose a favored operation type:</p>
+            <div class="option-group">
+              <span class="options" data-field="huntingGround">
+                <span class="option" data-value="Burglary">BURGLARY</span>
+                <span class="option" data-value="Espionage">ESPIONAGE</span>
+                <span class="option" data-value="Robbery">ROBBERY</span>
+                <span class="option" data-value="Sabotage">SABOTAGE</span>
+              </span>
+            </div>
+            <div class="hunting-descriptions">
+              <p><strong>Burglary:</strong> Theft by breaking and entering.</p>
+              <p><strong>Espionage:</strong> Obtain secret information by covert or clandestine means.</p>
+              <p><strong>Robbery:</strong> Theft by force or threats.</p>
+              <p><strong>Sabotage:</strong> Hurt an opponent by destroying something.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Shadows Upgrades -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">SHADOWS UPGRADES <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <p class="section-note starting-upgrades">Starting: <strong>Training: Prowess</strong> &bull; <strong>Lair: Hidden</strong></p>
+            <div class="upgrade-list">
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="upgrade_thiefRigging">
+                <span><strong>Thief Rigging:</strong> You get 2 free load worth of tool or gear items.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="upgrade_undergroundMaps">
+                <span><strong>Underground Maps and Passkeys:</strong> Easy passage through the underground canals, tunnels, and basements of the city.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="upgrade_eliteRooks">
+                <span><strong>Elite Rooks:</strong> All Rooks cohorts get <strong>+1d</strong> to quality rolls for Rook-related actions.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="upgrade_eliteSkulks">
+                <span><strong>Elite Skulks:</strong> All Skulks cohorts get <strong>+1d</strong> to quality rolls for Skulk-related actions.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="upgrade_steady">
+                <span><strong>Steady:</strong> Each PC gets <strong>+1 stress box</strong>. <em>(Costs 3 upgrades to unlock.)</em></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Shadows Special Abilities -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">SHADOWS ABILITIES <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="crew-ability-list">
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_everyoneSteals">
+                <span><strong>Everyone Steals:</strong> Each PC may add +1 action rating to <strong>Prowl</strong>, <strong>Finesse</strong>, or <strong>Tinker</strong> (up to max 3).</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_ghostEchoes">
+                <span><strong>Ghost Echoes:</strong> All crew members can see and interact with the ghostly structures, streets, and objects within the echo of Doskvol in the ghost field.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_packRats">
+                <span><strong>Pack Rats:</strong> Your lair is a jumble of stolen items. When you roll to <strong>acquire an asset</strong>, take <strong>+1d</strong>.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_patron">
+                <span><strong>Patron:</strong> When you advance your Tier, it costs <strong>half the coin</strong> it normally would.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_secondStory">
+                <span><strong>Second Story:</strong> When you execute a clandestine infiltration, you get <strong>+1d</strong> to the <strong>engagement roll</strong>.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_slippery">
+                <span><strong>Slippery:</strong> When you roll <strong>entanglements</strong>, roll twice and keep the one you want. When you <strong>reduce heat</strong>, take <strong>+1d</strong>.</span>
+              </label>
+              <label class="upgrade-check">
+                <input type="checkbox" data-field="crewAbility_synchronized">
+                <span><strong>Synchronized:</strong> When you perform a <strong>group action</strong>, you may count multiple 6s from different rolls as a <strong>critical</strong> success.</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Crew Right Column -->
+      <div class="crew-right">
+
+        <!-- Crew Contacts -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">CREW CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div id="crew-contacts-list" class="friends-list">
+              <!-- populated by JS -->
+            </div>
+            <button class="add-btn" data-add="crewContact">+ Add Contact</button>
+          </div>
+        </section>
+
+        <!-- Claims Map -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">SHADOWS CLAIMS <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="claims-grid">
+              <div class="claim" data-claim="claim_interrogation_chamber" title="Interrogation Chamber: +1d to Command and Sway on-site.">
+                <span class="claim-name">INTERROGATION CHAMBER</span>
+              </div>
+              <div class="claim" data-claim="claim_turf_1" title="Turf">
+                <span class="claim-name">TURF</span>
+              </div>
+              <div class="claim" data-claim="claim_loyal_fence" title="Loyal Fence: +2 coin in payoff for burglary or robbery scores.">
+                <span class="claim-name">LOYAL FENCE</span>
+              </div>
+              <div class="claim" data-claim="claim_gambling_den" title="Gambling Den: During downtime, roll dice equal to Tier. Earn coin equal to highest result, minus heat.">
+                <span class="claim-name">GAMBLING DEN</span>
+              </div>
+              <div class="claim" data-claim="claim_tavern" title="Tavern: +1d to Consort and Sway rolls on-site.">
+                <span class="claim-name">TAVERN</span>
+              </div>
+
+              <div class="claim" data-claim="claim_drug_den" title="Drug Den: During downtime, roll dice equal to Tier. Earn coin equal to highest result, minus heat.">
+                <span class="claim-name">DRUG DEN</span>
+              </div>
+              <div class="claim" data-claim="claim_informants" title="Informants: +1d to gather information for a score.">
+                <span class="claim-name">INFORMANTS</span>
+              </div>
+              <div class="claim lair-claim" data-claim="claim_lair" title="Lair (Hidden) - Your base of operations.">
+                <span class="claim-name">LAIR</span>
+              </div>
+              <div class="claim" data-claim="claim_turf_2" title="Turf">
+                <span class="claim-name">TURF</span>
+              </div>
+              <div class="claim" data-claim="claim_lookouts" title="Lookouts: +1d to Hunt or Survey on your turf.">
+                <span class="claim-name">LOOKOUTS</span>
+              </div>
+
+              <div class="claim" data-claim="claim_hagfish_farm" title="Hagfish Farm: +1d to reduce heat when score involves killing.">
+                <span class="claim-name">HAGFISH FARM</span>
+              </div>
+              <div class="claim" data-claim="claim_infirmary" title="Infirmary: +1d to healing treatment rolls.">
+                <span class="claim-name">INFIRMARY</span>
+              </div>
+              <div class="claim" data-claim="claim_covert_drop" title="Covert Drop: +2 coin in payoff for espionage or sabotage scores.">
+                <span class="claim-name">COVERT DROP</span>
+              </div>
+              <div class="claim" data-claim="claim_turf_3" title="Turf">
+                <span class="claim-name">TURF</span>
+              </div>
+              <div class="claim" data-claim="claim_secret_pathways" title="Secret Pathways: +1d to engagement roll for stealth plans.">
+                <span class="claim-name">SECRET PATHWAYS</span>
+              </div>
+            </div>
+            <p class="claims-hint">Click to toggle claims. Hover for descriptions.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Score Opportunities -->
+    <section class="section" data-collapsible>
+      <h2 class="section-head">SCORE OPPORTUNITIES <span class="collapse-toggle">&#9660;</span></h2>
+      <div class="section-body">
+        <p class="section-note"><em>For any opportunity, consider a Burglary, Espionage, Robbery, or Sabotage operation.</em></p>
+        <div class="opportunities-grid">
+          <table class="opp-table">
+            <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry.</td></tr>
+            <tr><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight.</td></tr>
+            <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery.</td></tr>
+            <tr><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house.</td></tr>
+            <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things.</td></tr>
+            <tr><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is.</td></tr>
+          </table>
+          <table class="opp-table">
+            <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key.</td></tr>
+            <tr><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product.</td></tr>
+            <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens.</td></tr>
+            <tr><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador.</td></tr>
+            <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques.</td></tr>
+            <tr><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary.</td></tr>
+          </table>
+          <table class="opp-table">
+            <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe.</td></tr>
+            <tr><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial.</td></tr>
+            <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder.</td></tr>
+            <tr><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden.</td></tr>
+            <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet.</td></tr>
+            <tr><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive?</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
   <!-- ═══════════ BOTTOM SECTIONS ═══════════ -->
   <div class="sheet-bottom">
 
