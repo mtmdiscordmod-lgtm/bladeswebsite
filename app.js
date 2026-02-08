@@ -543,8 +543,8 @@ function bindEvents() {
     }
 
     // Claims toggle
-    if (el.matches('.claim[data-claim]') || el.closest('.claim[data-claim]')) {
-      const claimEl = el.matches('.claim[data-claim]') ? el : el.closest('.claim[data-claim]');
+    const claimEl = el.closest('.claim[data-claim]');
+    if (claimEl) {
       const key = claimEl.dataset.claim;
       if (key === 'claim_lair') return; // Lair is always claimed
       state[key] = !state[key];

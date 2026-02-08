@@ -364,6 +364,48 @@
       </div>
     </div>
 
+    <!-- ── Claims Map (full width) ── -->
+    <section class="section" data-collapsible>
+      <h2 class="section-head">SHADOWS CLAIMS <span class="collapse-toggle">&#9660;</span></h2>
+      <div class="section-body">
+        <div class="claims-grid" id="claims-grid">
+          <!-- Row 1 -->
+          <div class="claim" data-claim="claim_interrogation_chamber"><span class="claim-name">INTERROGATION CHAMBER</span></div>
+          <div class="claim" data-claim="claim_turf_1"><span class="claim-name">TURF</span></div>
+          <div class="claim" data-claim="claim_loyal_fence"><span class="claim-name">LOYAL FENCE</span></div>
+          <div class="claim" data-claim="claim_gambling_den"><span class="claim-name">GAMBLING DEN</span></div>
+          <div class="claim" data-claim="claim_tavern"><span class="claim-name">TAVERN</span></div>
+          <!-- Row 2 -->
+          <div class="claim" data-claim="claim_drug_den"><span class="claim-name">DRUG DEN</span></div>
+          <div class="claim" data-claim="claim_informants"><span class="claim-name">INFORMANTS</span></div>
+          <div class="claim claim--lair" data-claim="claim_lair"><span class="claim-name">LAIR</span></div>
+          <div class="claim" data-claim="claim_turf_2"><span class="claim-name">TURF</span></div>
+          <div class="claim" data-claim="claim_lookouts"><span class="claim-name">LOOKOUTS</span></div>
+          <!-- Row 3 -->
+          <div class="claim" data-claim="claim_hagfish_farm"><span class="claim-name">HAGFISH FARM</span></div>
+          <div class="claim" data-claim="claim_infirmary"><span class="claim-name">INFIRMARY</span></div>
+          <div class="claim" data-claim="claim_covert_drop"><span class="claim-name">COVERT DROP</span></div>
+          <div class="claim" data-claim="claim_turf_3"><span class="claim-name">TURF</span></div>
+          <div class="claim" data-claim="claim_secret_pathways"><span class="claim-name">SECRET PATHWAYS</span></div>
+        </div>
+        <div class="claims-descriptions">
+          <div class="claims-desc-grid">
+            <p><strong>Covert Drop:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve espionage or sabotage.</p>
+            <p><strong>Informants:</strong> You get <strong>+1d</strong> to gather information for a score.</p>
+            <p><strong>Drug Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
+            <p><strong>Interrogation Chamber:</strong> You get <strong>+1d</strong> to <strong>Command</strong> and <strong>Sway</strong> on-site.</p>
+            <p><strong>Gambling Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
+            <p><strong>Lookouts:</strong> You get <strong>+1d</strong> to <strong>Hunt</strong> or <strong>Survey</strong> on your turf.</p>
+            <p><strong>Hagfish Farm:</strong> When you use the <strong>reduce heat</strong> downtime activity after a score that involves killing, you get <strong>+1d</strong>.</p>
+            <p><strong>Loyal Fence:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve burglary or robbery.</p>
+            <p><strong>Infirmary:</strong> You get <strong>+1d</strong> to healing treatment rolls.</p>
+            <p><strong>Secret Pathways:</strong> You get <strong>+1d</strong> to the <strong>engagement roll</strong> for <strong>stealth</strong> plans.</p>
+            <p><strong>Tavern:</strong> You get <strong>+1d</strong> to <strong>Consort</strong> and <strong>Sway</strong> rolls on-site.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="crew-body">
 
       <!-- Crew Left Column -->
@@ -388,6 +430,17 @@
               <p><strong>Robbery:</strong> Theft by force or threats.</p>
               <p><strong>Sabotage:</strong> Hurt an opponent by destroying something.</p>
             </div>
+          </div>
+        </section>
+
+        <!-- Crew Contacts -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">CREW CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div id="crew-contacts-list" class="friends-list">
+              <!-- populated by JS -->
+            </div>
+            <button class="add-btn" data-add="crewContact">+ Add Contact</button>
           </div>
         </section>
 
@@ -420,6 +473,11 @@
             </div>
           </div>
         </section>
+
+      </div>
+
+      <!-- Crew Right Column -->
+      <div class="crew-right">
 
         <!-- Shadows Special Abilities -->
         <section class="section" data-collapsible>
@@ -459,112 +517,41 @@
         </section>
 
       </div>
-
-      <!-- Crew Right Column -->
-      <div class="crew-right">
-
-        <!-- Crew Contacts -->
-        <section class="section" data-collapsible>
-          <h2 class="section-head">CREW CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
-          <div class="section-body">
-            <div id="crew-contacts-list" class="friends-list">
-              <!-- populated by JS -->
-            </div>
-            <button class="add-btn" data-add="crewContact">+ Add Contact</button>
-          </div>
-        </section>
-
-        <!-- Claims Map -->
-        <section class="section" data-collapsible>
-          <h2 class="section-head">SHADOWS CLAIMS <span class="collapse-toggle">&#9660;</span></h2>
-          <div class="section-body">
-            <div class="claims-grid">
-              <div class="claim" data-claim="claim_interrogation_chamber" title="Interrogation Chamber: +1d to Command and Sway on-site.">
-                <span class="claim-name">INTERROGATION CHAMBER</span>
-              </div>
-              <div class="claim" data-claim="claim_turf_1" title="Turf">
-                <span class="claim-name">TURF</span>
-              </div>
-              <div class="claim" data-claim="claim_loyal_fence" title="Loyal Fence: +2 coin in payoff for burglary or robbery scores.">
-                <span class="claim-name">LOYAL FENCE</span>
-              </div>
-              <div class="claim" data-claim="claim_gambling_den" title="Gambling Den: During downtime, roll dice equal to Tier. Earn coin equal to highest result, minus heat.">
-                <span class="claim-name">GAMBLING DEN</span>
-              </div>
-              <div class="claim" data-claim="claim_tavern" title="Tavern: +1d to Consort and Sway rolls on-site.">
-                <span class="claim-name">TAVERN</span>
-              </div>
-
-              <div class="claim" data-claim="claim_drug_den" title="Drug Den: During downtime, roll dice equal to Tier. Earn coin equal to highest result, minus heat.">
-                <span class="claim-name">DRUG DEN</span>
-              </div>
-              <div class="claim" data-claim="claim_informants" title="Informants: +1d to gather information for a score.">
-                <span class="claim-name">INFORMANTS</span>
-              </div>
-              <div class="claim lair-claim" data-claim="claim_lair" title="Lair (Hidden) - Your base of operations.">
-                <span class="claim-name">LAIR</span>
-              </div>
-              <div class="claim" data-claim="claim_turf_2" title="Turf">
-                <span class="claim-name">TURF</span>
-              </div>
-              <div class="claim" data-claim="claim_lookouts" title="Lookouts: +1d to Hunt or Survey on your turf.">
-                <span class="claim-name">LOOKOUTS</span>
-              </div>
-
-              <div class="claim" data-claim="claim_hagfish_farm" title="Hagfish Farm: +1d to reduce heat when score involves killing.">
-                <span class="claim-name">HAGFISH FARM</span>
-              </div>
-              <div class="claim" data-claim="claim_infirmary" title="Infirmary: +1d to healing treatment rolls.">
-                <span class="claim-name">INFIRMARY</span>
-              </div>
-              <div class="claim" data-claim="claim_covert_drop" title="Covert Drop: +2 coin in payoff for espionage or sabotage scores.">
-                <span class="claim-name">COVERT DROP</span>
-              </div>
-              <div class="claim" data-claim="claim_turf_3" title="Turf">
-                <span class="claim-name">TURF</span>
-              </div>
-              <div class="claim" data-claim="claim_secret_pathways" title="Secret Pathways: +1d to engagement roll for stealth plans.">
-                <span class="claim-name">SECRET PATHWAYS</span>
-              </div>
-            </div>
-            <p class="claims-hint">Click to toggle claims. Hover for descriptions.</p>
-          </div>
-        </section>
-
-      </div>
     </div>
 
-    <!-- Score Opportunities -->
+    <!-- Score Opportunities (full width, book style) -->
     <section class="section" data-collapsible>
       <h2 class="section-head">SCORE OPPORTUNITIES <span class="collapse-toggle">&#9660;</span></h2>
       <div class="section-body">
-        <p class="section-note"><em>For any opportunity, consider a Burglary, Espionage, Robbery, or Sabotage operation.</em></p>
-        <div class="opportunities-grid">
-          <table class="opp-table">
+        <table class="opp-table">
+          <tbody>
             <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry.</td></tr>
-            <tr><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight.</td></tr>
             <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery.</td></tr>
-            <tr><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house.</td></tr>
             <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things.</td></tr>
-            <tr><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is.</td></tr>
-          </table>
-          <table class="opp-table">
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is.</td></tr>
+          </tbody>
+          <tbody>
+            <tr class="opp-divider"><td colspan="2"></td></tr>
             <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key.</td></tr>
-            <tr><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product.</td></tr>
             <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens.</td></tr>
-            <tr><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador.</td></tr>
             <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques.</td></tr>
-            <tr><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary.</td></tr>
-          </table>
-          <table class="opp-table">
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary.</td></tr>
+          </tbody>
+          <tbody>
+            <tr class="opp-divider"><td colspan="2"></td></tr>
             <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe.</td></tr>
-            <tr><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial.</td></tr>
             <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder.</td></tr>
-            <tr><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden.</td></tr>
+            <tr class="opp-shaded"><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden.</td></tr>
             <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet.</td></tr>
-            <tr><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive?</td></tr>
-          </table>
-        </div>
+            <tr class="opp-shaded"><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive?</td></tr>
+          </tbody>
+        </table>
+        <p class="opp-footer"><em>For any opportunity above, consider a Burglary, Espionage, Robbery or Sabotage operation. To twist an opportunity or add additional elements, roll on the score generator tables.</em></p>
       </div>
     </section>
 
