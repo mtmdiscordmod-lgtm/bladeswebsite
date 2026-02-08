@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 ## Project Identity
-An interactive web-based character sheet for the "Blades in the Dark" tabletop RPG. It lets players create and manage characters, track crew mechanics (Shadows archetype), manage faction relationships, and roll dice with physics-based 3D animation — all persisted locally in the browser via localStorage.
+A fan-made web tool for the "Blades in the Dark" tabletop RPG (by John Harper — [bladesinthedark.com](https://bladesinthedark.com/)). It lets players create and manage characters, track crew mechanics (Shadows archetype), manage faction relationships, and roll dice with physics-based 3D animation — all persisted locally in the browser via localStorage.
 
 ## Tech Stack & Environment
 - **HTML5** — Single `index.html` with semantic markup, no templating
