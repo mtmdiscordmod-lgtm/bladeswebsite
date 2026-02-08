@@ -212,6 +212,24 @@ index.html
 | Use `innerHTML` with unsanitized user input | Always pass through `escHtml()` (app.js:1041-1043) | XSS risk from character names, faction names, etc. stored in state |
 | Modify `claim_lair` toggle behavior | Keep `claim_lair` always true (guard at app.js:784) | The Lair is the crew's starting claim per game rules |
 | Add deeply nested objects to state without thought | Remember `Object.assign` is a shallow merge | Nested objects from saved state overwrite defaults entirely — arrays/objects need complete defaults |
+| Tweak dice physics constants without testing all scenarios | Test grab, light toss, hard throw, wall bounce, multi-die fan-out, and settle detection after any change | Dice physics has been the hardest thing to get right — small changes cascade unpredictably |
 
 ## Planned / In-Progress Architecture Changes
-[None documented yet — will be updated as the user describes plans]
+
+### Near-term
+- **Dark mode** — CSS custom properties already in place; needs a toggle and alternate `:root` values
+- **Delete character** — Currently only "New Character" (reset). Need explicit delete for multi-character support
+- **Copy character** — Duplicate an existing character sheet
+
+### Medium-term
+- **Switchable characters** — Support multiple characters per browser (death is a big part of the game). Will need a character list/selector and per-character storage keys
+- **Character images** — Image URL field and/or Giphy search integration for player character portraits
+- **Crew member profiles** — Display other crew members with pictures/Giphy alongside the player's character
+- **Mobile-friendly version** — Responsive improvements or dedicated mobile layout
+
+### Long-term
+- **Modular architecture** — As features grow, the single `app.js` will need to be broken into modules (while still avoiding a build step if possible)
+- **Discord bot** — Dice rolling and other game utilities via Discord (separate project, not part of this codebase yet)
+
+### Privacy Constraint
+- **Local-only, no logins, no player data collection.** All data stays in the browser. Import/export JSON files are the sharing mechanism. This is a firm requirement.
