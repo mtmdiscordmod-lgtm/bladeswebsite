@@ -5,6 +5,38 @@
 
 const STORAGE_KEY = 'blades-character-sheet';
 
+// ── Playbook Starting Action Dots ──────
+const PLAYBOOK_DATA = {
+  Cutter: {
+    actions: { skirmish: 2, command: 1 },
+    xpTrigger: 'violence or coercion',
+  },
+  Hound: {
+    actions: { hunt: 2, survey: 1 },
+    xpTrigger: 'tracking or violence',
+  },
+  Leech: {
+    actions: { tinker: 2, wreck: 1 },
+    xpTrigger: 'technical skill or mayhem',
+  },
+  Lurk: {
+    actions: { prowl: 2, finesse: 1 },
+    xpTrigger: 'stealth or evasion',
+  },
+  Slide: {
+    actions: { sway: 2, consort: 1 },
+    xpTrigger: 'deception or influence',
+  },
+  Spider: {
+    actions: { consort: 2, study: 1 },
+    xpTrigger: 'calculation or conspiracy',
+  },
+  Whisper: {
+    actions: { attune: 2, study: 1 },
+    xpTrigger: 'knowledge or arcane power',
+  },
+};
+
 // ── Default State ──────────────────────
 function defaultState() {
   return {
@@ -152,6 +184,7 @@ function renderAll() {
   updateLoadMeter();
   renderCrewContacts();
   renderClaims();
+  renderPlaybookIndicators();
 }
 
 // ── Text Fields ────────────────────────
@@ -358,6 +391,27 @@ function renderClaims() {
   });
 }
 
+// ── Playbook Starting-Dot Indicators ──
+function renderPlaybookIndicators() {
+  // Clear old badges
+  document.querySelectorAll('.pb-badge').forEach(el => el.remove());
+
+  const pb = PLAYBOOK_DATA[state.playbook];
+  if (!pb) return;
+
+  document.querySelectorAll('.action-row').forEach(row => {
+    const action = row.dataset.action;
+    const dots = pb.actions[action];
+    if (dots) {
+      const badge = document.createElement('span');
+      badge.className = 'pb-badge';
+      badge.textContent = '+' + dots;
+      badge.title = state.playbook + ' starts with ' + dots;
+      row.appendChild(badge);
+    }
+  });
+}
+
 // ── Event Binding ──────────────────────
 function bindEvents() {
   const sheet = document.querySelector('.sheet');
@@ -430,6 +484,15 @@ function bindEvents() {
       state[field] = state[field] === val ? '' : val;
       saveState();
       renderOptionGroups();
+      if (field === 'playbook') {
+        renderPlaybookIndicators();
+        const pb = PLAYBOOK_DATA[state.playbook];
+        if (pb) {
+          state.xpChallenge = pb.xpTrigger;
+          saveState();
+          renderTextFields();
+        }
+      }
       return;
     }
 

@@ -304,6 +304,19 @@ textarea {
   letter-spacing: 0.06em;
 }
 
+/* ── Playbook starting-dot badges ── */
+.pb-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  background: #2d6a4f;
+  color: #fff;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-left: auto;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
 /* ── Dots (action ratings) ── */
 .dots {
   display: flex;
