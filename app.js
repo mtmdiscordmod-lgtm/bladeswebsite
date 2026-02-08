@@ -1041,7 +1041,7 @@ function escHtml(str) {
 }
 
 /* ════════════════════════════════════════
-   DICE PHYSICS SYSTEM
+   DICE PHYSICS SYSTEM — TRUE 3D CUBE
    ════════════════════════════════════════ */
 
 const DICE = {
@@ -1078,13 +1078,17 @@ function addDie() {
     y: window.innerHeight / 2 - DICE.dieSize / 2 + (Math.random() - 0.5) * 80,
     vx: 0,
     vy: 0,
-    rotation: Math.random() * 360,
-    rotationSpeed: 0,
-    value: Math.ceil(Math.random() * 6),
+    rotX: Math.floor(Math.random() * 4) * 90,
+    rotY: Math.floor(Math.random() * 4) * 90,
+    rotZ: 0,
+    rotSpeedX: 0,
+    rotSpeedY: 0,
+    rotSpeedZ: 0,
     settled: true,
     dragging: false,
-    lastFaceChange: 0,
     el: null,
+    cubeEl: null,
+    shadowEl: null,
   };
 
   const el = document.createElement('div');
@@ -1094,17 +1098,24 @@ function addDie() {
   shadowEl.className = 'die-shadow';
   el.appendChild(shadowEl);
 
-  const faceEl = document.createElement('div');
-  faceEl.className = 'die-face';
-  faceEl.innerHTML = renderDieDots(die.value);
-  el.appendChild(faceEl);
+  const cubeEl = document.createElement('div');
+  cubeEl.className = 'die-cube';
+
+  // Build all 6 faces once
+  for (let face = 1; face <= 6; face++) {
+    const faceEl = document.createElement('div');
+    faceEl.className = 'die-face die-face--' + face;
+    faceEl.innerHTML = renderDieDots(face);
+    cubeEl.appendChild(faceEl);
+  }
+
+  el.appendChild(cubeEl);
 
   el.style.left = die.x + 'px';
   el.style.top = die.y + 'px';
-  el.style.transform = 'rotate(' + die.rotation + 'deg)';
   DICE.container.appendChild(el);
   die.el = el;
-  die.faceEl = faceEl;
+  die.cubeEl = cubeEl;
   die.shadowEl = shadowEl;
 
   updateDie3D(die);
@@ -1147,12 +1158,14 @@ function updateDie3D(die, speed) {
     height = Math.min(speed / 20, 1);
   }
 
-  // Lift the face upward and scale slightly when "higher"
+  // Lift and scale the cube based on "height"
   const lift = height * 14;
   const scale = 1 + height * 0.06;
-  die.faceEl.style.transform = 'translateY(' + (-lift) + 'px) scale(' + scale + ')';
+  die.cubeEl.style.transform =
+    'translateY(' + (-lift) + 'px) scale(' + scale + ') ' +
+    'rotateX(' + die.rotX + 'deg) rotateY(' + die.rotY + 'deg) rotateZ(' + die.rotZ + 'deg)';
 
-  // Shadow grows larger, more diffuse, and lighter when die is higher
+  // Shadow grows larger and more diffuse when higher
   const sw = 40 + height * 20;
   const sh = 10 + height * 8;
   const blur = height * 5;
@@ -1174,7 +1187,9 @@ function setupDieDrag(die) {
     die.settled = false;
     die.vx = 0;
     die.vy = 0;
-    die.rotationSpeed = 0;
+    die.rotSpeedX = 0;
+    die.rotSpeedY = 0;
+    die.rotSpeedZ = 0;
     history = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
     die.el.setPointerCapture(e.pointerId);
     die.el.classList.add('grabbing');
@@ -1202,18 +1217,18 @@ function setupDieDrag(die) {
     if (history.length >= 2) {
       const first = history[0];
       const last = history[history.length - 1];
-      const dt = (last.t - first.t) / 1000; // seconds
+      const dt = (last.t - first.t) / 1000;
       if (dt > 0.001) {
         const throwScale = 0.018;
         const rawVx = (last.x - first.x) / dt;
         const rawVy = (last.y - first.y) / dt;
         die.vx = rawVx * throwScale;
         die.vy = rawVy * throwScale;
-        die.rotationSpeed = (die.vx + die.vy) * 1.5;
+        // 3D tumble from throw direction
+        die.rotSpeedX = die.vy * 3;
+        die.rotSpeedY = -die.vx * 3;
+        die.rotSpeedZ = (die.vx - die.vy) * 0.8;
         die.settled = false;
-        // Randomize face on throw
-        die.value = Math.ceil(Math.random() * 6);
-        die.faceEl.innerHTML = renderDieDots(die.value);
       }
     }
 
@@ -1231,7 +1246,7 @@ let diceLastTime = 0;
 function dicePhysicsLoop(timestamp) {
   if (!diceLastTime) diceLastTime = timestamp;
   const rawDt = (timestamp - diceLastTime) / 16.67;
-  const dt = Math.min(rawDt, 3); // cap to avoid jumps
+  const dt = Math.min(rawDt, 3);
   diceLastTime = timestamp;
 
   let anyMoving = false;
@@ -1246,81 +1261,77 @@ function dicePhysicsLoop(timestamp) {
     const f = Math.pow(DICE.friction, dt);
     die.vx *= f;
     die.vy *= f;
-    die.rotationSpeed *= f;
+    die.rotSpeedX *= f;
+    die.rotSpeedY *= f;
+    die.rotSpeedZ *= f;
 
     // Update position
     die.x += die.vx * dt;
     die.y += die.vy * dt;
-    die.rotation += die.rotationSpeed * dt;
+
+    // Update 3D rotation
+    die.rotX += die.rotSpeedX * dt;
+    die.rotY += die.rotSpeedY * dt;
+    die.rotZ += die.rotSpeedZ * dt;
 
     // Bounce off edges
     let bounced = false;
     if (die.x < 0) {
       die.x = 0;
       die.vx *= -DICE.bounce;
-      die.rotationSpeed *= -0.6;
+      die.rotSpeedY *= -0.6;
       bounced = true;
     } else if (die.x > maxX) {
       die.x = maxX;
       die.vx *= -DICE.bounce;
-      die.rotationSpeed *= -0.6;
+      die.rotSpeedY *= -0.6;
       bounced = true;
     }
 
     if (die.y < 0) {
       die.y = 0;
       die.vy *= -DICE.bounce;
-      die.rotationSpeed *= -0.6;
+      die.rotSpeedX *= -0.6;
       bounced = true;
     } else if (die.y > maxY) {
       die.y = maxY;
       die.vy *= -DICE.bounce;
-      die.rotationSpeed *= -0.6;
+      die.rotSpeedX *= -0.6;
       bounced = true;
     }
 
-    // Re-roll face on bounce
+    // Add random spin nudge on bounce
     if (bounced) {
-      die.value = Math.ceil(Math.random() * 6);
-      die.faceEl.innerHTML = renderDieDots(die.value);
-      die.lastFaceChange = timestamp;
+      die.rotSpeedZ += (Math.random() - 0.5) * 4;
     }
 
     // Update DOM position
     die.el.style.left = die.x + 'px';
     die.el.style.top = die.y + 'px';
-    die.el.style.transform = 'rotate(' + die.rotation + 'deg)';
 
-    // Check speed
+    // Check speed (both linear and rotational)
     const speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
+    const rotSpeed = Math.sqrt(
+      die.rotSpeedX * die.rotSpeedX +
+      die.rotSpeedY * die.rotSpeedY +
+      die.rotSpeedZ * die.rotSpeedZ
+    );
 
-    if (speed < DICE.minVelocity) {
-      // Settle
+    if (speed < DICE.minVelocity && rotSpeed < 1) {
+      // Settle — snap rotation so a clean face shows
       die.vx = 0;
       die.vy = 0;
-      die.rotationSpeed = 0;
+      die.rotSpeedX = 0;
+      die.rotSpeedY = 0;
+      die.rotSpeedZ = 0;
       die.settled = true;
-      die.value = Math.ceil(Math.random() * 6);
-      die.faceEl.innerHTML = renderDieDots(die.value);
-      // Snap rotation to nearest 90
-      die.rotation = Math.round(die.rotation / 90) * 90;
-      die.el.style.transform = 'rotate(' + die.rotation + 'deg)';
+      die.rotX = Math.round(die.rotX / 90) * 90;
+      die.rotY = Math.round(die.rotY / 90) * 90;
+      die.rotZ = Math.round(die.rotZ / 90) * 90;
       updateDie3D(die, 0);
     } else {
       anyMoving = true;
-      // Update 3D height effect based on speed
       updateDie3D(die, speed);
-      // Animate face changes while rolling — slower changes as speed drops
-      let interval = 200;
-      if (speed > 15) interval = 50;
-      else if (speed > 8) interval = 80;
-      else if (speed > 3) interval = 130;
-
-      if (timestamp - die.lastFaceChange > interval) {
-        die.value = Math.ceil(Math.random() * 6);
-        die.faceEl.innerHTML = renderDieDots(die.value);
-        die.lastFaceChange = timestamp;
-      }
     }
   }
 
