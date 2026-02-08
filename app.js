@@ -175,7 +175,7 @@ function init() {
   renderAll();
   bindEvents();
   updateTitle();
-  initDice();
+  DiceEngine.init();
   initDiceSettings();
   initAnimations();
 }
@@ -1043,384 +1043,627 @@ function escHtml(str) {
 }
 
 /* ════════════════════════════════════════
-   DICE PHYSICS SYSTEM — TRUE 3D CUBE
+   DICE PHYSICS — MATTER.JS ENGINE
    ════════════════════════════════════════ */
 
-const DICE = {
-  dice: [],
-  container: null,
-  animFrame: null,
-  friction: 0.967,        // realistic table friction
-  bounce: 0.24,           // barely bounces — thud
-  minVelocity: 0.3,       // stops sooner
-  dieSize: 54,
-  maxDice: 10,
-  snapThreshold: 5,       // start settling earlier
-  snapStrength: 0.12,     // snaps to face faster
-  throwScale: 0.014,      // throw force multiplier
-};
+var DiceEngine = (function() {
+  // Matter.js aliases
+  var Engine, Bodies, Body, Composite, Events, Mouse, MouseConstraint, Runner, Render;
+  var engine, runner, mConstraint;
+  var walls = [];
+  var dice = [];
+  var container;
+  var animFrame = null;
+  var maxDice = 10;
+  var dieSize = 54;
+  var wallThickness = 60;
+  var selectedDice = [];
 
-const DIE_PATTERNS = {
-  1: [5],
-  2: [3, 7],
-  3: [3, 5, 7],
-  4: [1, 3, 7, 9],
-  5: [1, 3, 5, 7, 9],
-  6: [1, 3, 4, 6, 7, 9],
-};
-
-function initDice() {
-  DICE.container = document.getElementById('dice-container');
-  document.getElementById('btn-add-die').addEventListener('click', addDie);
-  document.getElementById('btn-remove-die').addEventListener('click', removeLastDie);
-}
-
-function addDie() {
-  if (DICE.dice.length >= DICE.maxDice) return;
-
-  const die = {
-    x: window.innerWidth / 2 - DICE.dieSize / 2 + (Math.random() - 0.5) * 80,
-    y: window.innerHeight / 2 - DICE.dieSize / 2 + (Math.random() - 0.5) * 80,
-    vx: 0,
-    vy: 0,
-    rotX: Math.floor(Math.random() * 4) * 90,
-    rotY: Math.floor(Math.random() * 4) * 90,
-    rotZ: 0,
-    rotSpeedX: 0,
-    rotSpeedY: 0,
-    rotSpeedZ: 0,
-    dragTiltX: 0,
-    dragTiltY: 0,
-    settled: true,
-    dragging: false,
-    el: null,
-    cubeEl: null,
-    shadowEl: null,
+  // Physics settings (mapped from sliders)
+  var settings = {
+    restitution: 0.25,
+    frictionAir: 0.06,
+    density: 0.004,
+    friction: 0.3,
   };
 
-  const el = document.createElement('div');
-  el.className = 'die';
+  // Each die object: { body, el, cubeEl, shadowEl, resultEl, rotX, rotY, rotZ, rotVX, rotVY, rotVZ, settled, selected }
 
-  const shadowEl = document.createElement('div');
-  shadowEl.className = 'die-shadow';
-  el.appendChild(shadowEl);
+  var DIE_PATTERNS = {
+    1: [5],
+    2: [3, 7],
+    3: [3, 5, 7],
+    4: [1, 3, 7, 9],
+    5: [1, 3, 5, 7, 9],
+    6: [1, 3, 4, 6, 7, 9],
+  };
 
-  const cubeEl = document.createElement('div');
-  cubeEl.className = 'die-cube';
-
-  // Build all 6 faces once
-  for (let face = 1; face <= 6; face++) {
-    const faceEl = document.createElement('div');
-    faceEl.className = 'die-face die-face--' + face;
-    faceEl.innerHTML = renderDieDots(face);
-    cubeEl.appendChild(faceEl);
-  }
-
-  el.appendChild(cubeEl);
-
-  el.style.left = die.x + 'px';
-  el.style.top = die.y + 'px';
-  DICE.container.appendChild(el);
-  die.el = el;
-  die.cubeEl = cubeEl;
-  die.shadowEl = shadowEl;
-
-  updateDie3D(die);
-  setupDieDrag(die);
-  DICE.dice.push(die);
-}
-
-function removeLastDie() {
-  if (DICE.dice.length === 0) return;
-  const die = DICE.dice.pop();
-  die.el.remove();
-  if (DICE.dice.length === 0 && DICE.animFrame) {
-    cancelAnimationFrame(DICE.animFrame);
-    DICE.animFrame = null;
-  }
-}
-
-function renderDieDots(value) {
-  const dots = DIE_PATTERNS[value] || [];
-  let html = '';
-  for (let i = 1; i <= 9; i++) {
-    html += dots.includes(i)
-      ? '<span class="die-dot"></span>'
-      : '<span></span>';
-  }
-  return html;
-}
-
-function updateDie3D(die, speed) {
-  if (speed === undefined) {
-    speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
-  }
-
-  let height;
-  if (die.dragging) {
-    height = 0.5;
-  } else if (die.settled) {
-    height = 0;
-  } else {
-    height = Math.min(speed / 20, 1);
-  }
-
-  const lift = height * 14;
-  const scale = 1 + height * 0.06;
-
-  // Apply drag tilt when carrying, otherwise straight physics rotation
-  var rx = die.rotX;
-  var ry = die.rotY;
-  var rz = die.rotZ;
-  if (die.dragging) {
-    rx += die.dragTiltX;
-    ry += die.dragTiltY;
-  }
-
-  die.cubeEl.style.transform =
-    'translateY(' + (-lift) + 'px) scale(' + scale + ') ' +
-    'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
-
-  // Shadow grows larger and more diffuse when higher
-  var sw = 40 + height * 20;
-  var sh = 10 + height * 8;
-  var blur = height * 5;
-  var opacity = 0.4 - height * 0.15;
-
-  die.shadowEl.style.width = sw + 'px';
-  die.shadowEl.style.height = sh + 'px';
-  die.shadowEl.style.filter = 'blur(' + blur + 'px)';
-  die.shadowEl.style.opacity = opacity;
-  die.shadowEl.style.bottom = (-6 - height * 6) + 'px';
-}
-
-function setupDieDrag(die) {
-  var history = [];
-
-  function onDown(e) {
-    e.preventDefault();
-    die.dragging = true;
-    die.settled = false;
-    die.vx = 0;
-    die.vy = 0;
-    die.rotSpeedX = 0;
-    die.rotSpeedY = 0;
-    die.rotSpeedZ = 0;
-    die.dragTiltX = 0;
-    die.dragTiltY = 0;
-    history = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
-    die.el.setPointerCapture(e.pointerId);
-    die.el.classList.add('grabbing');
-    updateDie3D(die);
-  }
-
-  function onMove(e) {
-    if (!die.dragging) return;
-    e.preventDefault();
-    die.x = e.clientX - DICE.dieSize / 2;
-    die.y = e.clientY - DICE.dieSize / 2;
-    die.el.style.left = die.x + 'px';
-    die.el.style.top = die.y + 'px';
-
-    history.push({ x: e.clientX, y: e.clientY, t: performance.now() });
-    if (history.length > 6) history.shift();
-
-    // Drag tilt — inertia makes the die lean away from movement
-    if (history.length >= 2) {
-      var prev = history[history.length - 2];
-      var curr = history[history.length - 1];
-      var dtMove = (curr.t - prev.t) / 1000;
-      if (dtMove > 0) {
-        var dx = (curr.x - prev.x) / dtMove;
-        var dy = (curr.y - prev.y) / dtMove;
-        // Target tilt: moving right → right edge dips (rotY positive)
-        // moving down → bottom edge dips (rotX negative)
-        var targetTiltX = Math.max(-18, Math.min(18, -dy * 0.012));
-        var targetTiltY = Math.max(-18, Math.min(18, dx * 0.012));
-        // Smooth lerp so it doesn't jitter
-        die.dragTiltX = die.dragTiltX * 0.65 + targetTiltX * 0.35;
-        die.dragTiltY = die.dragTiltY * 0.65 + targetTiltY * 0.35;
-      }
+  function init() {
+    if (typeof Matter === 'undefined') {
+      console.warn('Matter.js not loaded — dice disabled');
+      return;
     }
-    updateDie3D(die);
+
+    Engine = Matter.Engine;
+    Bodies = Matter.Bodies;
+    Body = Matter.Body;
+    Composite = Matter.Composite;
+    Events = Matter.Events;
+    Mouse = Matter.Mouse;
+    MouseConstraint = Matter.MouseConstraint;
+    Runner = Matter.Runner;
+
+    container = document.getElementById('dice-container');
+
+    // Create engine with zero gravity (top-down perspective)
+    engine = Engine.create({
+      gravity: { x: 0, y: 0 },
+    });
+
+    // Create walls
+    buildWalls();
+    window.addEventListener('resize', buildWalls);
+
+    // Set up mouse constraint for grab & throw
+    setupMouseConstraint();
+
+    // Collision events for visual feedback
+    Events.on(engine, 'collisionStart', onCollision);
+
+    // Set up selection box
+    setupSelectionBox();
+
+    // Toolbar buttons
+    document.getElementById('btn-add-die').addEventListener('click', addDie);
+    document.getElementById('btn-remove-die').addEventListener('click', removeLastDie);
+
+    // Start the engine and render loop
+    runner = Runner.create();
+    Runner.run(runner, engine);
+    startRenderLoop();
   }
 
-  function onUp(e) {
-    if (!die.dragging) return;
-    die.dragging = false;
-    die.el.classList.remove('grabbing');
+  function buildWalls() {
+    // Remove old walls
+    if (walls.length) {
+      Composite.remove(engine.world, walls);
+      walls = [];
+    }
 
-    // Transfer drag tilt energy into tumble rotation
-    die.rotSpeedX += die.dragTiltX * 2;
-    die.rotSpeedY += die.dragTiltY * 2;
-    die.dragTiltX = 0;
-    die.dragTiltY = 0;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+    var t = wallThickness;
 
-    // Calculate throw velocity from recent movement
-    if (history.length >= 2) {
-      var first = history[0];
-      var last = history[history.length - 1];
-      var dt = (last.t - first.t) / 1000;
-      if (dt > 0.001) {
-        var rawVx = (last.x - first.x) / dt;
-        var rawVy = (last.y - first.y) / dt;
-        die.vx = rawVx * DICE.throwScale;
-        die.vy = rawVy * DICE.throwScale;
-        // 3D tumble proportional to throw direction
-        die.rotSpeedX += die.vy * 4;
-        die.rotSpeedY += -die.vx * 4;
-        die.rotSpeedZ += (die.vx - die.vy) * 1.2;
+    walls = [
+      Bodies.rectangle(w / 2, -t / 2, w + t * 2, t, { isStatic: true }),       // top
+      Bodies.rectangle(w / 2, h + t / 2, w + t * 2, t, { isStatic: true }),     // bottom
+      Bodies.rectangle(-t / 2, h / 2, t, h + t * 2, { isStatic: true }),        // left
+      Bodies.rectangle(w + t / 2, h / 2, t, h + t * 2, { isStatic: true }),     // right
+    ];
+
+    walls.forEach(function(wall) {
+      wall.restitution = 0.3;
+      wall.friction = 0.5;
+    });
+
+    Composite.add(engine.world, walls);
+  }
+
+  function setupMouseConstraint() {
+    var mouse = Mouse.create(document.body);
+
+    // Prevent Matter's mouse from capturing scroll events
+    mouse.element.removeEventListener('mousewheel', mouse.mousewheel);
+    mouse.element.removeEventListener('DOMMouseScroll', mouse.mousewheel);
+
+    mConstraint = MouseConstraint.create(engine, {
+      mouse: mouse,
+      constraint: {
+        stiffness: 0.6,
+        damping: 0.1,
+        render: { visible: false },
+      },
+    });
+
+    Composite.add(engine.world, mConstraint);
+
+    // Track drag state for tilt
+    Events.on(mConstraint, 'startdrag', function(e) {
+      var die = getDieByBody(e.body);
+      if (die) {
         die.settled = false;
+        die.el.classList.add('grabbing');
+        // Clear result label when grabbed
+        if (die.resultEl) {
+          die.resultEl.style.opacity = '0';
+        }
+      }
+    });
+
+    Events.on(mConstraint, 'enddrag', function(e) {
+      var die = getDieByBody(e.body);
+      if (die) {
+        die.el.classList.remove('grabbing');
+
+        // Transfer velocity into tumble
+        var vel = e.body.velocity;
+        var speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+        die.rotVX += vel.y * 0.8;
+        die.rotVY += -vel.x * 0.8;
+        die.rotVZ += (vel.x - vel.y) * 0.3;
+
+        // If this die is selected and part of a group, fan-out throw the others
+        if (die.selected && selectedDice.length > 1) {
+          fanOutThrow(die, vel);
+        }
+      }
+    });
+  }
+
+  function addDie() {
+    if (dice.length >= maxDice) return;
+
+    var cx = window.innerWidth / 2 + (Math.random() - 0.5) * 80;
+    var cy = window.innerHeight / 2 + (Math.random() - 0.5) * 80;
+
+    var body = Bodies.rectangle(cx, cy, dieSize - 4, dieSize - 4, {
+      chamfer: { radius: 5 },
+      restitution: settings.restitution,
+      frictionAir: settings.frictionAir,
+      density: settings.density,
+      friction: settings.friction,
+    });
+
+    Composite.add(engine.world, body);
+
+    // Create DOM element
+    var el = document.createElement('div');
+    el.className = 'die';
+
+    var shadowEl = document.createElement('div');
+    shadowEl.className = 'die-shadow';
+    el.appendChild(shadowEl);
+
+    var cubeEl = document.createElement('div');
+    cubeEl.className = 'die-cube';
+
+    for (var face = 1; face <= 6; face++) {
+      var faceEl = document.createElement('div');
+      faceEl.className = 'die-face die-face--' + face;
+      faceEl.innerHTML = renderDieDots(face);
+      cubeEl.appendChild(faceEl);
+    }
+
+    el.appendChild(cubeEl);
+
+    var resultEl = document.createElement('div');
+    resultEl.className = 'die-result';
+    el.appendChild(resultEl);
+
+    container.appendChild(el);
+
+    var die = {
+      body: body,
+      el: el,
+      cubeEl: cubeEl,
+      shadowEl: shadowEl,
+      resultEl: resultEl,
+      rotX: Math.floor(Math.random() * 4) * 90,
+      rotY: Math.floor(Math.random() * 4) * 90,
+      rotZ: 0,
+      rotVX: 0,
+      rotVY: 0,
+      rotVZ: 0,
+      settled: true,
+      selected: false,
+      settleFrames: 0,
+    };
+
+    dice.push(die);
+
+    // GSAP spawn animation
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(el,
+        { scale: 0, opacity: 0, rotation: -180 },
+        { scale: 1, opacity: 1, rotation: 0, duration: 0.4, ease: 'back.out(1.7)' }
+      );
+    }
+  }
+
+  function removeLastDie() {
+    if (dice.length === 0) return;
+    var die = dice[dice.length - 1];
+
+    // Deselect if needed
+    var selIdx = selectedDice.indexOf(die);
+    if (selIdx >= 0) selectedDice.splice(selIdx, 1);
+
+    if (typeof gsap !== 'undefined') {
+      gsap.to(die.el, {
+        scale: 0, opacity: 0, rotation: 180, duration: 0.3, ease: 'power2.in',
+        onComplete: function() {
+          die.el.remove();
+          Composite.remove(engine.world, die.body);
+        }
+      });
+    } else {
+      die.el.remove();
+      Composite.remove(engine.world, die.body);
+    }
+
+    dice.pop();
+  }
+
+  function renderDieDots(value) {
+    var dots = DIE_PATTERNS[value] || [];
+    var html = '';
+    for (var i = 1; i <= 9; i++) {
+      html += dots.includes(i)
+        ? '<span class="die-dot"></span>'
+        : '<span></span>';
+    }
+    return html;
+  }
+
+  function getDieByBody(body) {
+    for (var i = 0; i < dice.length; i++) {
+      if (dice[i].body === body) return dice[i];
+    }
+    return null;
+  }
+
+  // ── Render loop: sync DOM to physics ──
+  function startRenderLoop() {
+    function loop() {
+      for (var i = 0; i < dice.length; i++) {
+        syncDie(dice[i]);
+      }
+      animFrame = requestAnimationFrame(loop);
+    }
+    animFrame = requestAnimationFrame(loop);
+  }
+
+  function syncDie(die) {
+    var pos = die.body.position;
+    var vel = die.body.velocity;
+    var speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+    var angle = die.body.angle;
+
+    // Position DOM element (centered on body)
+    die.el.style.left = (pos.x - dieSize / 2) + 'px';
+    die.el.style.top = (pos.y - dieSize / 2) + 'px';
+
+    // Determine if being dragged via mouse constraint
+    var isDragged = mConstraint.body === die.body;
+
+    // 3D rotation: derive tumble from 2D velocity
+    if (isDragged) {
+      // Tilt toward movement direction while dragging
+      var targetTiltX = Math.max(-18, Math.min(18, -vel.y * 0.04));
+      var targetTiltY = Math.max(-18, Math.min(18, vel.x * 0.04));
+      die.rotVX = die.rotVX * 0.7 + targetTiltX * 0.3;
+      die.rotVY = die.rotVY * 0.7 + targetTiltY * 0.3;
+    } else if (!die.settled) {
+      // Free rolling: add rotational velocity from linear speed
+      die.rotX += die.rotVX;
+      die.rotY += die.rotVY;
+      die.rotZ += die.rotVZ;
+
+      // Rotational friction (air drag on tumble)
+      var rotFriction = 0.94;
+      die.rotVX *= rotFriction;
+      die.rotVY *= rotFriction;
+      die.rotVZ *= rotFriction;
+
+      // Add rotation from linear movement (coupling)
+      die.rotVX += vel.y * 0.02;
+      die.rotVY -= vel.x * 0.02;
+
+      // Snap spring toward nearest 90° as speed drops
+      if (speed < 3) {
+        var t = 1 - speed / 3;
+        var pull = 0.08 * t * t;
+        var targetX = Math.round(die.rotX / 90) * 90;
+        var targetY = Math.round(die.rotY / 90) * 90;
+        var targetZ = Math.round(die.rotZ / 90) * 90;
+        die.rotVX += (targetX - die.rotX) * pull;
+        die.rotVY += (targetY - die.rotY) * pull;
+        die.rotVZ += (targetZ - die.rotZ) * pull;
+        die.rotVX *= (1 - 0.04 * t);
+        die.rotVY *= (1 - 0.04 * t);
+        die.rotVZ *= (1 - 0.04 * t);
       }
     }
 
-    startPhysicsLoop();
-  }
-
-  die.el.addEventListener('pointerdown', onDown);
-  die.el.addEventListener('pointermove', onMove);
-  die.el.addEventListener('pointerup', onUp);
-  die.el.addEventListener('pointercancel', onUp);
-}
-
-var diceLastTime = 0;
-
-function dicePhysicsLoop(timestamp) {
-  if (!diceLastTime) diceLastTime = timestamp;
-  var rawDt = (timestamp - diceLastTime) / 16.67;
-  var dt = Math.min(rawDt, 3);
-  diceLastTime = timestamp;
-
-  var anyMoving = false;
-
-  var maxX = window.innerWidth - DICE.dieSize;
-  var maxY = window.innerHeight - DICE.dieSize;
-
-  for (var d = 0; d < DICE.dice.length; d++) {
-    var die = DICE.dice[d];
-    if (die.dragging || die.settled) continue;
-
-    // Apply friction
-    var f = Math.pow(DICE.friction, dt);
-    die.vx *= f;
-    die.vy *= f;
-    die.rotSpeedX *= f;
-    die.rotSpeedY *= f;
-    die.rotSpeedZ *= f;
-
-    // Update position
-    die.x += die.vx * dt;
-    die.y += die.vy * dt;
-
-    // Update 3D rotation
-    die.rotX += die.rotSpeedX * dt;
-    die.rotY += die.rotSpeedY * dt;
-    die.rotZ += die.rotSpeedZ * dt;
-
-    // --- Rotational snap spring ---
-    // As the die slows, gently pull rotation toward nearest 90° (smooth settle)
-    var speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
-    if (speed < DICE.snapThreshold) {
-      var t = 1 - speed / DICE.snapThreshold; // 0→1 as speed drops to 0
-      var pull = DICE.snapStrength * t * t;    // quadratic ease — stronger pull as it slows
-      var targetX = Math.round(die.rotX / 90) * 90;
-      var targetY = Math.round(die.rotY / 90) * 90;
-      var targetZ = Math.round(die.rotZ / 90) * 90;
-      die.rotSpeedX += (targetX - die.rotX) * pull;
-      die.rotSpeedY += (targetY - die.rotY) * pull;
-      die.rotSpeedZ += (targetZ - die.rotZ) * pull;
-      // Damping to prevent oscillation around the target
-      var damp = 1 - 0.03 * t;
-      die.rotSpeedX *= damp;
-      die.rotSpeedY *= damp;
-      die.rotSpeedZ *= damp;
-    }
-
-    // --- Bounce off edges ---
-    var bounced = false;
-    if (die.x < 0) {
-      die.x = 0;
-      die.vx *= -DICE.bounce;
-      die.rotSpeedY *= -0.7;
-      die.rotSpeedX += (Math.random() - 0.5) * 3;
-      bounced = true;
-    } else if (die.x > maxX) {
-      die.x = maxX;
-      die.vx *= -DICE.bounce;
-      die.rotSpeedY *= -0.7;
-      die.rotSpeedX += (Math.random() - 0.5) * 3;
-      bounced = true;
-    }
-
-    if (die.y < 0) {
-      die.y = 0;
-      die.vy *= -DICE.bounce;
-      die.rotSpeedX *= -0.7;
-      die.rotSpeedY += (Math.random() - 0.5) * 3;
-      bounced = true;
-    } else if (die.y > maxY) {
-      die.y = maxY;
-      die.vy *= -DICE.bounce;
-      die.rotSpeedX *= -0.7;
-      die.rotSpeedY += (Math.random() - 0.5) * 3;
-      bounced = true;
-    }
-
-    if (bounced) {
-      die.rotSpeedZ += (Math.random() - 0.5) * 5;
-    }
-
-    // Update DOM position
-    die.el.style.left = die.x + 'px';
-    die.el.style.top = die.y + 'px';
-
-    // --- Settle check ---
-    // Only settle when rotation has naturally eased close to a clean face
-    var rotSpeed = Math.sqrt(
-      die.rotSpeedX * die.rotSpeedX +
-      die.rotSpeedY * die.rotSpeedY +
-      die.rotSpeedZ * die.rotSpeedZ
-    );
-    var distX = Math.abs(die.rotX - Math.round(die.rotX / 90) * 90);
-    var distY = Math.abs(die.rotY - Math.round(die.rotY / 90) * 90);
-    var distZ = Math.abs(die.rotZ - Math.round(die.rotZ / 90) * 90);
-
-    if (speed < DICE.minVelocity && rotSpeed < 0.5 &&
-        distX < 1.5 && distY < 1.5 && distZ < 1.5) {
-      // Die has naturally eased into a face — final snap is imperceptible
-      die.vx = 0;
-      die.vy = 0;
-      die.rotSpeedX = 0;
-      die.rotSpeedY = 0;
-      die.rotSpeedZ = 0;
-      die.settled = true;
-      die.rotX = Math.round(die.rotX / 90) * 90;
-      die.rotY = Math.round(die.rotY / 90) * 90;
-      die.rotZ = Math.round(die.rotZ / 90) * 90;
-      updateDie3D(die, 0);
+    // Settle detection
+    var rotSpeed = Math.sqrt(die.rotVX * die.rotVX + die.rotVY * die.rotVY + die.rotVZ * die.rotVZ);
+    if (!isDragged && !die.settled && speed < 0.3 && rotSpeed < 0.4) {
+      var distX = Math.abs(die.rotX - Math.round(die.rotX / 90) * 90);
+      var distY = Math.abs(die.rotY - Math.round(die.rotY / 90) * 90);
+      var distZ = Math.abs(die.rotZ - Math.round(die.rotZ / 90) * 90);
+      if (distX < 2 && distY < 2 && distZ < 2) {
+        die.settleFrames++;
+        if (die.settleFrames > 10) {
+          settleDie(die);
+        }
+      } else {
+        die.settleFrames = 0;
+      }
     } else {
-      anyMoving = true;
-      updateDie3D(die, speed);
+      die.settleFrames = 0;
+    }
+
+    // Visual: height based on speed
+    var height;
+    if (isDragged) {
+      height = 0.5;
+    } else if (die.settled) {
+      height = 0;
+    } else {
+      height = Math.min(speed / 15, 1);
+    }
+
+    var lift = height * 14;
+    var scale = 1 + height * 0.06;
+
+    var rx = die.rotX + (isDragged ? die.rotVX : 0);
+    var ry = die.rotY + (isDragged ? die.rotVY : 0);
+    var rz = die.rotZ + angle * (180 / Math.PI);
+
+    die.cubeEl.style.transform =
+      'translateY(' + (-lift) + 'px) scale(' + scale + ') ' +
+      'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
+
+    // Shadow
+    var sw = 40 + height * 20;
+    var sh = 10 + height * 8;
+    var blur = height * 5;
+    var opacity = 0.4 - height * 0.15;
+    die.shadowEl.style.width = sw + 'px';
+    die.shadowEl.style.height = sh + 'px';
+    die.shadowEl.style.filter = 'blur(' + blur + 'px)';
+    die.shadowEl.style.opacity = opacity;
+    die.shadowEl.style.bottom = (-6 - height * 6) + 'px';
+  }
+
+  function settleDie(die) {
+    die.settled = true;
+    die.rotVX = 0;
+    die.rotVY = 0;
+    die.rotVZ = 0;
+    die.rotX = Math.round(die.rotX / 90) * 90;
+    die.rotY = Math.round(die.rotY / 90) * 90;
+    die.rotZ = Math.round(die.rotZ / 90) * 90;
+    Body.setVelocity(die.body, { x: 0, y: 0 });
+
+    // Determine which face is up
+    var result = getTopFace(die);
+
+    // Show result label with GSAP
+    if (die.resultEl) {
+      die.resultEl.textContent = result;
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(die.resultEl,
+          { opacity: 0, y: 5, scale: 0.8 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.35, ease: 'back.out(1.7)' }
+        );
+        // Settle pulse on the die itself
+        gsap.fromTo(die.cubeEl,
+          { scale: 1 },
+          { scale: 1.08, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out' }
+        );
+      } else {
+        die.resultEl.style.opacity = '1';
+      }
     }
   }
 
-  if (anyMoving || DICE.dice.some(function(d) { return d.dragging; })) {
-    DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
-  } else {
-    DICE.animFrame = null;
-    diceLastTime = 0;
-  }
-}
+  function getTopFace(die) {
+    // Normalize rotations to 0-360 range
+    var rx = ((die.rotX % 360) + 360) % 360;
+    var ry = ((die.rotY % 360) + 360) % 360;
 
-function startPhysicsLoop() {
-  if (!DICE.animFrame) {
-    diceLastTime = 0;
-    DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
+    // Round to nearest 90
+    rx = Math.round(rx / 90) * 90 % 360;
+    ry = Math.round(ry / 90) * 90 % 360;
+
+    // Map rotation state to face number
+    // Face 1 is front (rotY=0), Face 6 is back (rotY=180)
+    // Face 2 is right (rotY=90), Face 5 is left (rotY=270)
+    // Face 3 is bottom (rotX=90), Face 4 is top (rotX=270)
+    if (rx === 0 || rx === 360) {
+      if (ry === 0 || ry === 360) return 1;
+      if (ry === 90) return 2;
+      if (ry === 180) return 6;
+      if (ry === 270) return 5;
+    }
+    if (rx === 90) return 4;
+    if (rx === 270) return 3;
+    if (rx === 180) {
+      if (ry === 0 || ry === 360) return 6;
+      if (ry === 90) return 5;
+      if (ry === 180) return 1;
+      if (ry === 270) return 2;
+    }
+    return 1; // fallback
   }
-}
+
+  // ── Collision visual feedback ──
+  function onCollision(event) {
+    var pairs = event.pairs;
+    for (var i = 0; i < pairs.length; i++) {
+      var pair = pairs[i];
+      var dieA = getDieByBody(pair.bodyA);
+      var dieB = getDieByBody(pair.bodyB);
+
+      if (dieA) flashDie(dieA);
+      if (dieB) flashDie(dieB);
+
+      // Add rotational kick on collision
+      if (dieA && !dieA.settled) {
+        var velA = pair.bodyA.velocity;
+        dieA.rotVX += (Math.random() - 0.5) * 3;
+        dieA.rotVY += (Math.random() - 0.5) * 3;
+      }
+      if (dieB && !dieB.settled) {
+        dieB.rotVX += (Math.random() - 0.5) * 3;
+        dieB.rotVY += (Math.random() - 0.5) * 3;
+      }
+    }
+  }
+
+  function flashDie(die) {
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(die.el,
+        { filter: 'brightness(1.6)' },
+        { filter: 'brightness(1)', duration: 0.2, ease: 'power2.out', overwrite: true }
+      );
+    }
+  }
+
+  // ── Fan-out throw for selected dice ──
+  function fanOutThrow(originDie, baseVel) {
+    var speed = Math.sqrt(baseVel.x * baseVel.x + baseVel.y * baseVel.y);
+    if (speed < 1) return;
+
+    var baseAngle = Math.atan2(baseVel.y, baseVel.x);
+    var spreadAngle = Math.PI / 6; // 30° total spread
+    var count = selectedDice.length;
+
+    selectedDice.forEach(function(die, idx) {
+      if (die === originDie) return;
+
+      var angleOffset = (idx / (count - 1) - 0.5) * spreadAngle;
+      var throwAngle = baseAngle + angleOffset;
+      var throwSpeed = speed * (0.7 + Math.random() * 0.3);
+
+      Body.setVelocity(die.body, {
+        x: Math.cos(throwAngle) * throwSpeed,
+        y: Math.sin(throwAngle) * throwSpeed,
+      });
+
+      die.settled = false;
+      die.settleFrames = 0;
+      die.rotVX += (Math.random() - 0.5) * 8;
+      die.rotVY += (Math.random() - 0.5) * 8;
+      die.rotVZ += (Math.random() - 0.5) * 4;
+
+      if (die.resultEl) {
+        die.resultEl.style.opacity = '0';
+      }
+    });
+  }
+
+  // ── Ctrl+Click+Drag selection box ──
+  function setupSelectionBox() {
+    var selBox = document.getElementById('selection-box');
+    var selStart = null;
+    var isSelecting = false;
+
+    document.addEventListener('pointerdown', function(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      // Don't start selection if clicking on a die
+      if (e.target.closest('.die')) return;
+
+      isSelecting = true;
+      selStart = { x: e.clientX, y: e.clientY };
+      selBox.style.left = e.clientX + 'px';
+      selBox.style.top = e.clientY + 'px';
+      selBox.style.width = '0';
+      selBox.style.height = '0';
+      selBox.style.display = 'block';
+      e.preventDefault();
+    });
+
+    document.addEventListener('pointermove', function(e) {
+      if (!isSelecting) return;
+
+      var x = Math.min(e.clientX, selStart.x);
+      var y = Math.min(e.clientY, selStart.y);
+      var w = Math.abs(e.clientX - selStart.x);
+      var h = Math.abs(e.clientY - selStart.y);
+
+      selBox.style.left = x + 'px';
+      selBox.style.top = y + 'px';
+      selBox.style.width = w + 'px';
+      selBox.style.height = h + 'px';
+    });
+
+    document.addEventListener('pointerup', function(e) {
+      if (!isSelecting) return;
+      isSelecting = false;
+      selBox.style.display = 'none';
+
+      var rect = {
+        left: Math.min(e.clientX, selStart.x),
+        top: Math.min(e.clientY, selStart.y),
+        right: Math.max(e.clientX, selStart.x),
+        bottom: Math.max(e.clientY, selStart.y),
+      };
+
+      // Clear previous selection
+      clearSelection();
+
+      // Select dice within the box
+      dice.forEach(function(die) {
+        var pos = die.body.position;
+        if (pos.x >= rect.left && pos.x <= rect.right &&
+            pos.y >= rect.top && pos.y <= rect.bottom) {
+          die.selected = true;
+          die.el.classList.add('selected');
+          selectedDice.push(die);
+        }
+      });
+
+      // GSAP bounce on newly selected dice
+      if (typeof gsap !== 'undefined') {
+        selectedDice.forEach(function(die) {
+          gsap.fromTo(die.cubeEl,
+            { scale: 1.12 },
+            { scale: 1, duration: 0.3, ease: 'elastic.out(1, 0.5)' }
+          );
+        });
+      }
+    });
+
+    // Click on empty space to deselect
+    document.addEventListener('click', function(e) {
+      if (e.ctrlKey || e.metaKey) return;
+      if (e.target.closest('.die') || e.target.closest('.dice-toolbar') || e.target.closest('.dice-settings')) return;
+      clearSelection();
+    });
+  }
+
+  function clearSelection() {
+    selectedDice.forEach(function(die) {
+      die.selected = false;
+      die.el.classList.remove('selected');
+    });
+    selectedDice = [];
+  }
+
+  // ── Apply slider settings to all dice bodies ──
+  function applySettings(newSettings) {
+    settings = Object.assign(settings, newSettings);
+    dice.forEach(function(die) {
+      die.body.restitution = settings.restitution;
+      die.body.frictionAir = settings.frictionAir;
+      die.body.density = settings.density;
+      die.body.friction = settings.friction;
+    });
+  }
+
+  return {
+    init: init,
+    addDie: addDie,
+    removeLastDie: removeLastDie,
+    applySettings: applySettings,
+    getSettings: function() { return settings; },
+  };
+})();
 
 /* ════════════════════════════════════════
-   DICE SETTINGS PANEL
+   DICE SETTINGS PANEL (MATTER.JS)
    ════════════════════════════════════════ */
 
 var DICE_PRESETS = {
@@ -1429,10 +1672,13 @@ var DICE_PRESETS = {
   heavy:     { friction: 90, bounce: 10, weight: 85 },
 };
 
-function sliderToPhysics(friction, bounce, weight) {
-  DICE.friction   = 0.993 - (friction / 100) * 0.043;
-  DICE.bounce     = 0.05  + (bounce  / 100) * 0.75;
-  DICE.throwScale = 0.025 - (weight  / 100) * 0.020;
+function sliderToMatterPhysics(friction, bounce, weight) {
+  return {
+    frictionAir: 0.02 + (friction / 100) * 0.10,   // 0.02–0.12 (table drag)
+    restitution: 0.05 + (bounce / 100) * 0.65,      // 0.05–0.70 (bounciness)
+    density: 0.001 + (weight / 100) * 0.009,         // 0.001–0.010 (mass)
+    friction: 0.1 + (friction / 100) * 0.5,          // 0.1–0.6 (surface friction)
+  };
 }
 
 function initDiceSettings() {
@@ -1464,7 +1710,7 @@ function initDiceSettings() {
     vFriction.textContent = f;
     vBounce.textContent   = b;
     vWeight.textContent   = w;
-    sliderToPhysics(f, b, w);
+    DiceEngine.applySettings(sliderToMatterPhysics(f, b, w));
   }
 
   function saveSettings(presetName) {
@@ -1488,12 +1734,10 @@ function initDiceSettings() {
     });
   }
 
-  // Slider input
   sFriction.addEventListener('input', function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sBounce.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sWeight.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
 
-  // Preset buttons
   panel.querySelectorAll('.dice-preset-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       var p = DICE_PRESETS[btn.dataset.preset];
@@ -1507,7 +1751,6 @@ function initDiceSettings() {
     });
   });
 
-  // Open / close
   function togglePanel() {
     if (panel.classList.contains('open')) {
       if (typeof gsap !== 'undefined') {
@@ -1565,7 +1808,6 @@ function switchTabAnimated(tabName) {
   var newPanel = document.querySelector('.tab-panel[data-tab="' + tabName + '"]');
   if (!newPanel || currentPanel === newPanel) return;
 
-  // Update tab buttons immediately
   document.querySelectorAll('.tab').forEach(function(t) {
     t.classList.toggle('active', t.dataset.tab === tabName);
   });
@@ -1583,7 +1825,6 @@ function switchTabAnimated(tabName) {
         { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
       );
 
-      // Stagger sections in new tab
       var targets = newPanel.querySelectorAll('.section, .crew-trackers, .factions-header, .crew-section-header, .character-info');
       if (targets.length) {
         gsap.from(targets, { opacity: 0, y: 12, duration: 0.3, stagger: 0.04, ease: 'power2.out' });
@@ -1605,7 +1846,6 @@ function toggleCollapseAnimated(section) {
   var toggle = section.querySelector('.collapse-toggle');
 
   if (section.classList.contains('collapsed')) {
-    // Expand
     section.classList.remove('collapsed');
     var h = body.scrollHeight;
     gsap.fromTo(body,
@@ -1614,7 +1854,6 @@ function toggleCollapseAnimated(section) {
     );
     if (toggle) gsap.to(toggle, { rotation: 0, duration: 0.25, ease: 'power2.out' });
   } else {
-    // Collapse
     var startH = body.offsetHeight;
     if (toggle) gsap.to(toggle, { rotation: -90, duration: 0.25, ease: 'power2.in' });
     gsap.fromTo(body,
