@@ -1048,11 +1048,13 @@ const DICE = {
   dice: [],
   container: null,
   animFrame: null,
-  friction: 0.982,
-  bounce: 0.6,
-  minVelocity: 0.4,
+  friction: 0.988,        // heavier — more momentum carry
+  bounce: 0.55,           // less bouncy — more thud
+  minVelocity: 0.15,      // lower settle so it rolls longer
   dieSize: 54,
   maxDice: 10,
+  snapThreshold: 3.5,     // speed below which rotation starts easing to face
+  snapStrength: 0.08,     // how hard rotation pulls toward 90°
 };
 
 const DIE_PATTERNS = {
@@ -1084,6 +1086,8 @@ function addDie() {
     rotSpeedX: 0,
     rotSpeedY: 0,
     rotSpeedZ: 0,
+    dragTiltX: 0,
+    dragTiltY: 0,
     settled: true,
     dragging: false,
     el: null,
@@ -1158,18 +1162,27 @@ function updateDie3D(die, speed) {
     height = Math.min(speed / 20, 1);
   }
 
-  // Lift and scale the cube based on "height"
   const lift = height * 14;
   const scale = 1 + height * 0.06;
+
+  // Apply drag tilt when carrying, otherwise straight physics rotation
+  var rx = die.rotX;
+  var ry = die.rotY;
+  var rz = die.rotZ;
+  if (die.dragging) {
+    rx += die.dragTiltX;
+    ry += die.dragTiltY;
+  }
+
   die.cubeEl.style.transform =
     'translateY(' + (-lift) + 'px) scale(' + scale + ') ' +
-    'rotateX(' + die.rotX + 'deg) rotateY(' + die.rotY + 'deg) rotateZ(' + die.rotZ + 'deg)';
+    'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) rotateZ(' + rz + 'deg)';
 
   // Shadow grows larger and more diffuse when higher
-  const sw = 40 + height * 20;
-  const sh = 10 + height * 8;
-  const blur = height * 5;
-  const opacity = 0.4 - height * 0.15;
+  var sw = 40 + height * 20;
+  var sh = 10 + height * 8;
+  var blur = height * 5;
+  var opacity = 0.4 - height * 0.15;
 
   die.shadowEl.style.width = sw + 'px';
   die.shadowEl.style.height = sh + 'px';
@@ -1179,7 +1192,7 @@ function updateDie3D(die, speed) {
 }
 
 function setupDieDrag(die) {
-  let history = [];
+  var history = [];
 
   function onDown(e) {
     e.preventDefault();
@@ -1190,6 +1203,8 @@ function setupDieDrag(die) {
     die.rotSpeedX = 0;
     die.rotSpeedY = 0;
     die.rotSpeedZ = 0;
+    die.dragTiltX = 0;
+    die.dragTiltY = 0;
     history = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
     die.el.setPointerCapture(e.pointerId);
     die.el.classList.add('grabbing');
@@ -1206,6 +1221,25 @@ function setupDieDrag(die) {
 
     history.push({ x: e.clientX, y: e.clientY, t: performance.now() });
     if (history.length > 6) history.shift();
+
+    // Drag tilt — inertia makes the die lean away from movement
+    if (history.length >= 2) {
+      var prev = history[history.length - 2];
+      var curr = history[history.length - 1];
+      var dtMove = (curr.t - prev.t) / 1000;
+      if (dtMove > 0) {
+        var dx = (curr.x - prev.x) / dtMove;
+        var dy = (curr.y - prev.y) / dtMove;
+        // Target tilt: moving right → right edge dips (rotY positive)
+        // moving down → bottom edge dips (rotX negative)
+        var targetTiltX = Math.max(-18, Math.min(18, -dy * 0.012));
+        var targetTiltY = Math.max(-18, Math.min(18, dx * 0.012));
+        // Smooth lerp so it doesn't jitter
+        die.dragTiltX = die.dragTiltX * 0.65 + targetTiltX * 0.35;
+        die.dragTiltY = die.dragTiltY * 0.65 + targetTiltY * 0.35;
+      }
+    }
+    updateDie3D(die);
   }
 
   function onUp(e) {
@@ -1213,21 +1247,27 @@ function setupDieDrag(die) {
     die.dragging = false;
     die.el.classList.remove('grabbing');
 
+    // Transfer drag tilt energy into tumble rotation
+    die.rotSpeedX += die.dragTiltX * 2;
+    die.rotSpeedY += die.dragTiltY * 2;
+    die.dragTiltX = 0;
+    die.dragTiltY = 0;
+
     // Calculate throw velocity from recent movement
     if (history.length >= 2) {
-      const first = history[0];
-      const last = history[history.length - 1];
-      const dt = (last.t - first.t) / 1000;
+      var first = history[0];
+      var last = history[history.length - 1];
+      var dt = (last.t - first.t) / 1000;
       if (dt > 0.001) {
-        const throwScale = 0.018;
-        const rawVx = (last.x - first.x) / dt;
-        const rawVy = (last.y - first.y) / dt;
+        var throwScale = 0.015;
+        var rawVx = (last.x - first.x) / dt;
+        var rawVy = (last.y - first.y) / dt;
         die.vx = rawVx * throwScale;
         die.vy = rawVy * throwScale;
-        // 3D tumble from throw direction
-        die.rotSpeedX = die.vy * 3;
-        die.rotSpeedY = -die.vx * 3;
-        die.rotSpeedZ = (die.vx - die.vy) * 0.8;
+        // 3D tumble proportional to throw direction
+        die.rotSpeedX += die.vy * 4;
+        die.rotSpeedY += -die.vx * 4;
+        die.rotSpeedZ += (die.vx - die.vy) * 1.2;
         die.settled = false;
       }
     }
@@ -1241,24 +1281,25 @@ function setupDieDrag(die) {
   die.el.addEventListener('pointercancel', onUp);
 }
 
-let diceLastTime = 0;
+var diceLastTime = 0;
 
 function dicePhysicsLoop(timestamp) {
   if (!diceLastTime) diceLastTime = timestamp;
-  const rawDt = (timestamp - diceLastTime) / 16.67;
-  const dt = Math.min(rawDt, 3);
+  var rawDt = (timestamp - diceLastTime) / 16.67;
+  var dt = Math.min(rawDt, 3);
   diceLastTime = timestamp;
 
-  let anyMoving = false;
+  var anyMoving = false;
 
-  const maxX = window.innerWidth - DICE.dieSize;
-  const maxY = window.innerHeight - DICE.dieSize;
+  var maxX = window.innerWidth - DICE.dieSize;
+  var maxY = window.innerHeight - DICE.dieSize;
 
-  for (const die of DICE.dice) {
+  for (var d = 0; d < DICE.dice.length; d++) {
+    var die = DICE.dice[d];
     if (die.dragging || die.settled) continue;
 
     // Apply friction
-    const f = Math.pow(DICE.friction, dt);
+    var f = Math.pow(DICE.friction, dt);
     die.vx *= f;
     die.vy *= f;
     die.rotSpeedX *= f;
@@ -1274,51 +1315,77 @@ function dicePhysicsLoop(timestamp) {
     die.rotY += die.rotSpeedY * dt;
     die.rotZ += die.rotSpeedZ * dt;
 
-    // Bounce off edges
-    let bounced = false;
+    // --- Rotational snap spring ---
+    // As the die slows, gently pull rotation toward nearest 90° (smooth settle)
+    var speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
+    if (speed < DICE.snapThreshold) {
+      var t = 1 - speed / DICE.snapThreshold; // 0→1 as speed drops to 0
+      var pull = DICE.snapStrength * t * t;    // quadratic ease — stronger pull as it slows
+      var targetX = Math.round(die.rotX / 90) * 90;
+      var targetY = Math.round(die.rotY / 90) * 90;
+      var targetZ = Math.round(die.rotZ / 90) * 90;
+      die.rotSpeedX += (targetX - die.rotX) * pull;
+      die.rotSpeedY += (targetY - die.rotY) * pull;
+      die.rotSpeedZ += (targetZ - die.rotZ) * pull;
+      // Damping to prevent oscillation around the target
+      var damp = 1 - 0.03 * t;
+      die.rotSpeedX *= damp;
+      die.rotSpeedY *= damp;
+      die.rotSpeedZ *= damp;
+    }
+
+    // --- Bounce off edges ---
+    var bounced = false;
     if (die.x < 0) {
       die.x = 0;
       die.vx *= -DICE.bounce;
-      die.rotSpeedY *= -0.6;
+      die.rotSpeedY *= -0.7;
+      die.rotSpeedX += (Math.random() - 0.5) * 3;
       bounced = true;
     } else if (die.x > maxX) {
       die.x = maxX;
       die.vx *= -DICE.bounce;
-      die.rotSpeedY *= -0.6;
+      die.rotSpeedY *= -0.7;
+      die.rotSpeedX += (Math.random() - 0.5) * 3;
       bounced = true;
     }
 
     if (die.y < 0) {
       die.y = 0;
       die.vy *= -DICE.bounce;
-      die.rotSpeedX *= -0.6;
+      die.rotSpeedX *= -0.7;
+      die.rotSpeedY += (Math.random() - 0.5) * 3;
       bounced = true;
     } else if (die.y > maxY) {
       die.y = maxY;
       die.vy *= -DICE.bounce;
-      die.rotSpeedX *= -0.6;
+      die.rotSpeedX *= -0.7;
+      die.rotSpeedY += (Math.random() - 0.5) * 3;
       bounced = true;
     }
 
-    // Add random spin nudge on bounce
     if (bounced) {
-      die.rotSpeedZ += (Math.random() - 0.5) * 4;
+      die.rotSpeedZ += (Math.random() - 0.5) * 5;
     }
 
     // Update DOM position
     die.el.style.left = die.x + 'px';
     die.el.style.top = die.y + 'px';
 
-    // Check speed (both linear and rotational)
-    const speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
-    const rotSpeed = Math.sqrt(
+    // --- Settle check ---
+    // Only settle when rotation has naturally eased close to a clean face
+    var rotSpeed = Math.sqrt(
       die.rotSpeedX * die.rotSpeedX +
       die.rotSpeedY * die.rotSpeedY +
       die.rotSpeedZ * die.rotSpeedZ
     );
+    var distX = Math.abs(die.rotX - Math.round(die.rotX / 90) * 90);
+    var distY = Math.abs(die.rotY - Math.round(die.rotY / 90) * 90);
+    var distZ = Math.abs(die.rotZ - Math.round(die.rotZ / 90) * 90);
 
-    if (speed < DICE.minVelocity && rotSpeed < 1) {
-      // Settle — snap rotation so a clean face shows
+    if (speed < DICE.minVelocity && rotSpeed < 0.5 &&
+        distX < 1.5 && distY < 1.5 && distZ < 1.5) {
+      // Die has naturally eased into a face — final snap is imperceptible
       die.vx = 0;
       die.vy = 0;
       die.rotSpeedX = 0;
@@ -1335,7 +1402,7 @@ function dicePhysicsLoop(timestamp) {
     }
   }
 
-  if (anyMoving || DICE.dice.some(d => d.dragging)) {
+  if (anyMoving || DICE.dice.some(function(d) { return d.dragging; })) {
     DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
   } else {
     DICE.animFrame = null;
