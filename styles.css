@@ -1,0 +1,866 @@
+/* ════════════════════════════════════════
+   Blades in the Dark — Character Sheet
+   ════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f4f0ea;
+  --sheet-bg: #fff;
+  --text: #1a1a1a;
+  --border: #1a1a1a;
+  --border-light: #ccc;
+  --accent: #1a1a1a;
+  --dot-empty: #d5d5d5;
+  --dot-filled: #1a1a1a;
+  --box-empty: #e8e8e8;
+  --box-filled: #1a1a1a;
+  --xp-empty: #d5d5d5;
+  --xp-filled: #555;
+  --section-bg: #fafaf8;
+  --hover: #eee;
+  --selected: #1a1a1a;
+  --selected-text: #fff;
+  --clock-filled: rgba(26, 26, 26, 0.8);
+  --danger: #c0392b;
+  --font-title: 'Georgia', 'Times New Roman', serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.4;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* ── Sheet Container ── */
+.sheet {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: var(--sheet-bg);
+  border: 3px solid var(--border);
+  padding: 1.5rem;
+  position: relative;
+}
+
+/* ── HEADER ── */
+.sheet-header {
+  border-bottom: 3px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-title);
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.title-sm {
+  font-size: 0.65em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.playbook-row {
+  margin-top: 0.5rem;
+}
+
+.header-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.header-field label {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.header-field input {
+  flex: 1;
+}
+
+/* ── Common field styles ── */
+label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+input[type="text"],
+textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  border: none;
+  border-bottom: 1.5px solid var(--border-light);
+  padding: 0.3rem 0.25rem;
+  background: transparent;
+  color: var(--text);
+  width: 100%;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  border-bottom-color: var(--border);
+}
+
+textarea {
+  border: 1.5px solid var(--border-light);
+  border-radius: 3px;
+  resize: vertical;
+  min-height: 5rem;
+  padding: 0.5rem;
+}
+
+/* ── CHARACTER INFO ── */
+.character-info {
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info-row {
+  margin-bottom: 0.6rem;
+}
+
+.info-row.two-col {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 180px;
+}
+
+.field.full {
+  width: 100%;
+}
+
+.field label {
+  white-space: nowrap;
+}
+
+.field input {
+  flex: 1;
+}
+
+/* ── Option groups (heritage, background, vice, trauma conditions) ── */
+.option-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 200px;
+}
+
+.option-group strong {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+}
+
+.option {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.option:hover {
+  background: var(--hover);
+}
+
+.option.selected {
+  background: var(--selected);
+  color: var(--selected-text);
+}
+
+.options .option + .option::before {
+  content: "\2014";
+  margin-right: 0.15rem;
+  color: var(--border-light);
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.option.selected + .option::before,
+.option + .option.selected::before {
+  color: transparent;
+}
+
+/* ── SHEET BODY (two-column layout) ── */
+.sheet-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 750px) {
+  .sheet-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Sections ── */
+.section {
+  border: 2px solid var(--border);
+  margin-bottom: 0.75rem;
+}
+
+.section-head {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  font-weight: 900;
+  padding: 0.45rem 0.6rem;
+  background: var(--accent);
+  color: var(--selected-text);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+  user-select: none;
+}
+
+.section-head .collapse-toggle {
+  margin-left: auto;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.section.collapsed .collapse-toggle {
+  transform: rotate(-90deg);
+}
+
+.section.collapsed .section-body {
+  display: none;
+}
+
+.section-body {
+  padding: 0.6rem;
+}
+
+/* ── Action Sections ── */
+.action-section .section-head {
+  flex-wrap: wrap;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0;
+}
+
+.action-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+}
+
+/* ── Dots (action ratings) ── */
+.dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--dot-filled);
+  background: var(--dot-empty);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dot:hover {
+  background: #bbb;
+}
+
+.dot.filled {
+  background: var(--dot-filled);
+}
+
+/* ── XP Tracks ── */
+.xp-track,
+.xp-track-inline {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.xp-mark {
+  width: 14px;
+  height: 20px;
+  background: var(--xp-empty);
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid #bbb;
+}
+
+.xp-mark:hover {
+  background: #bbb;
+}
+
+.xp-mark.filled {
+  background: var(--xp-filled);
+  border-color: var(--xp-filled);
+}
+
+.xp-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border: 2px solid var(--border);
+  margin-bottom: 0.75rem;
+  background: var(--section-bg);
+}
+
+.xp-track-inline {
+  margin-left: 0.5rem;
+}
+
+/* ── Box Tracks (stress, trauma, stash, coin) ── */
+.box-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.box {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--border);
+  background: var(--box-empty);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.box:hover {
+  background: #ccc;
+}
+
+.box.filled {
+  background: var(--box-filled);
+}
+
+.stash-track {
+  max-width: 260px;
+}
+
+.stash-track .box {
+  width: 18px;
+  height: 18px;
+}
+
+.track-group {
+  margin-bottom: 0.3rem;
+}
+
+.track-label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.track-value {
+  font-weight: 400;
+  font-family: var(--font-mono);
+}
+
+.stress-trauma-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Harm ── */
+.harm-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.harm-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.harm-level {
+  font-weight: 900;
+  font-size: 1.1rem;
+  font-family: var(--font-title);
+  width: 1.5rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.harm-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.harm-effect {
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #666;
+  flex-shrink: 0;
+}
+
+/* ── Healing & Armor ── */
+.healing-armor-row {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.healing-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clock {
+  cursor: pointer;
+  color: var(--text);
+}
+
+.clock-seg {
+  fill: transparent;
+  transition: fill 0.15s;
+  cursor: pointer;
+}
+
+.clock-seg:hover {
+  fill: rgba(26, 26, 26, 0.15);
+}
+
+.clock-seg.filled {
+  fill: var(--clock-filled);
+}
+
+.armor-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.armor-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.armor-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.armor-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+/* ── Friends ── */
+.friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.friend-status {
+  display: flex;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.friend-status-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.1rem 0.15rem;
+  line-height: 1;
+  color: var(--border-light);
+  transition: color 0.15s;
+}
+
+.friend-status-btn:hover {
+  color: var(--text);
+}
+
+.friend-status-btn.active {
+  color: var(--text);
+}
+
+.friend-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.friend-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--border-light);
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+
+.friend-remove:hover {
+  color: var(--danger);
+}
+
+/* ── Abilities ── */
+.ability-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.ability-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ability-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ability-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--border-light);
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+
+.ability-remove:hover {
+  color: var(--danger);
+}
+
+/* ── Items & Load ── */
+.load-selector {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.load-option {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.load-option input[type="radio"] {
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.load-diamond {
+  font-size: 1rem;
+}
+
+.load-meter {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 0.5rem;
+}
+
+.load-meter.over {
+  color: var(--danger);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.item-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.item-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-load-sel {
+  width: 40px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  padding: 0.15rem;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.item-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--border-light);
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+
+.item-remove:hover {
+  color: var(--danger);
+}
+
+/* ── Add Buttons ── */
+.add-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.35rem;
+  border: 1.5px dashed var(--border-light);
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  text-align: center;
+}
+
+.add-btn:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* ── Clear / Reset Buttons ── */
+.clear-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #999;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+
+.clear-btn:hover {
+  color: var(--text);
+}
+
+/* ── Bottom Sections ── */
+.sheet-bottom {
+  margin-top: 1rem;
+}
+
+.xp-rule {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.4;
+}
+
+.xp-questions {
+  margin-top: 0.5rem;
+}
+
+.xp-questions .field {
+  margin-bottom: 0.4rem;
+}
+
+.xp-questions label {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+}
+
+/* ── Reference ── */
+.reference-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 750px) {
+  .reference-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ref-block h3 {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 0.2rem;
+}
+
+.ref-block ul {
+  list-style: none;
+  padding: 0;
+}
+
+.ref-block li {
+  font-size: 0.82rem;
+  padding: 0.15rem 0;
+}
+
+.ref-block p {
+  font-size: 0.82rem;
+  margin-bottom: 0.4rem;
+}
+
+.ref-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.ref-table td {
+  padding: 0.15rem 0.25rem;
+  border: 1px solid var(--border-light);
+}
+
+.bonus-text {
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.toolbar button {
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  background: var(--sheet-bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.toolbar button:hover {
+  background: var(--accent);
+  color: var(--selected-text);
+}
+
+/* ── Print styles ── */
+@media print {
+  body {
+    background: #fff;
+    padding: 0;
+  }
+  .sheet {
+    border: none;
+    padding: 0;
+    max-width: none;
+  }
+  .toolbar {
+    display: none;
+  }
+  .add-btn,
+  .clear-btn,
+  .friend-remove,
+  .ability-remove,
+  .item-remove {
+    display: none;
+  }
+}
