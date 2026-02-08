@@ -1089,13 +1089,25 @@ function addDie() {
 
   const el = document.createElement('div');
   el.className = 'die';
-  el.innerHTML = renderDieFace(die.value);
+
+  const shadowEl = document.createElement('div');
+  shadowEl.className = 'die-shadow';
+  el.appendChild(shadowEl);
+
+  const faceEl = document.createElement('div');
+  faceEl.className = 'die-face';
+  faceEl.innerHTML = renderDieDots(die.value);
+  el.appendChild(faceEl);
+
   el.style.left = die.x + 'px';
   el.style.top = die.y + 'px';
   el.style.transform = 'rotate(' + die.rotation + 'deg)';
   DICE.container.appendChild(el);
   die.el = el;
+  die.faceEl = faceEl;
+  die.shadowEl = shadowEl;
 
+  updateDie3D(die);
   setupDieDrag(die);
   DICE.dice.push(die);
 }
@@ -1110,16 +1122,47 @@ function removeLastDie() {
   }
 }
 
-function renderDieFace(value) {
+function renderDieDots(value) {
   const dots = DIE_PATTERNS[value] || [];
-  let html = '<div class="die-face">';
+  let html = '';
   for (let i = 1; i <= 9; i++) {
     html += dots.includes(i)
       ? '<span class="die-dot"></span>'
       : '<span></span>';
   }
-  html += '</div>';
   return html;
+}
+
+function updateDie3D(die, speed) {
+  if (speed === undefined) {
+    speed = Math.sqrt(die.vx * die.vx + die.vy * die.vy);
+  }
+
+  let height;
+  if (die.dragging) {
+    height = 0.5;
+  } else if (die.settled) {
+    height = 0;
+  } else {
+    height = Math.min(speed / 20, 1);
+  }
+
+  // Lift the face upward and scale slightly when "higher"
+  const lift = height * 14;
+  const scale = 1 + height * 0.06;
+  die.faceEl.style.transform = 'translateY(' + (-lift) + 'px) scale(' + scale + ')';
+
+  // Shadow grows larger, more diffuse, and lighter when die is higher
+  const sw = 40 + height * 20;
+  const sh = 10 + height * 8;
+  const blur = height * 5;
+  const opacity = 0.4 - height * 0.15;
+
+  die.shadowEl.style.width = sw + 'px';
+  die.shadowEl.style.height = sh + 'px';
+  die.shadowEl.style.filter = 'blur(' + blur + 'px)';
+  die.shadowEl.style.opacity = opacity;
+  die.shadowEl.style.bottom = (-6 - height * 6) + 'px';
 }
 
 function setupDieDrag(die) {
@@ -1135,6 +1178,7 @@ function setupDieDrag(die) {
     history = [{ x: e.clientX, y: e.clientY, t: performance.now() }];
     die.el.setPointerCapture(e.pointerId);
     die.el.classList.add('grabbing');
+    updateDie3D(die);
   }
 
   function onMove(e) {
@@ -1169,7 +1213,7 @@ function setupDieDrag(die) {
         die.settled = false;
         // Randomize face on throw
         die.value = Math.ceil(Math.random() * 6);
-        die.el.innerHTML = renderDieFace(die.value);
+        die.faceEl.innerHTML = renderDieDots(die.value);
       }
     }
 
@@ -1238,7 +1282,7 @@ function dicePhysicsLoop(timestamp) {
     // Re-roll face on bounce
     if (bounced) {
       die.value = Math.ceil(Math.random() * 6);
-      die.el.innerHTML = renderDieFace(die.value);
+      die.faceEl.innerHTML = renderDieDots(die.value);
       die.lastFaceChange = timestamp;
     }
 
@@ -1257,12 +1301,15 @@ function dicePhysicsLoop(timestamp) {
       die.rotationSpeed = 0;
       die.settled = true;
       die.value = Math.ceil(Math.random() * 6);
-      die.el.innerHTML = renderDieFace(die.value);
+      die.faceEl.innerHTML = renderDieDots(die.value);
       // Snap rotation to nearest 90
       die.rotation = Math.round(die.rotation / 90) * 90;
       die.el.style.transform = 'rotate(' + die.rotation + 'deg)';
+      updateDie3D(die, 0);
     } else {
       anyMoving = true;
+      // Update 3D height effect based on speed
+      updateDie3D(die, speed);
       // Animate face changes while rolling — slower changes as speed drops
       let interval = 200;
       if (speed > 15) interval = 50;
@@ -1271,7 +1318,7 @@ function dicePhysicsLoop(timestamp) {
 
       if (timestamp - die.lastFaceChange > interval) {
         die.value = Math.ceil(Math.random() * 6);
-        die.el.innerHTML = renderDieFace(die.value);
+        die.faceEl.innerHTML = renderDieDots(die.value);
         die.lastFaceChange = timestamp;
       }
     }
