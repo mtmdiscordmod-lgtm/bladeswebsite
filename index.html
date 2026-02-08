@@ -693,8 +693,37 @@
 <div class="dice-toolbar">
   <button id="btn-add-die" title="Add a d6">+ d6</button>
   <button id="btn-remove-die" title="Remove a d6">&minus; d6</button>
+  <button id="btn-dice-settings" title="Dice Physics Settings">&#9881;</button>
 </div>
 
+<!-- ═══════════ DICE SETTINGS PANEL ═══════════ -->
+<div id="dice-settings" class="dice-settings">
+  <div class="dice-settings-header">
+    <h3>DICE PHYSICS</h3>
+    <button id="dice-settings-close" class="dice-settings-close">&times;</button>
+  </div>
+  <div class="dice-settings-body">
+    <div class="dice-slider-group">
+      <label>Friction <span class="dice-val" id="dice-val-friction">60</span></label>
+      <input type="range" id="dice-slider-friction" min="0" max="100" value="60">
+    </div>
+    <div class="dice-slider-group">
+      <label>Bounciness <span class="dice-val" id="dice-val-bounce">25</span></label>
+      <input type="range" id="dice-slider-bounce" min="0" max="100" value="25">
+    </div>
+    <div class="dice-slider-group">
+      <label>Weight <span class="dice-val" id="dice-val-weight">55</span></label>
+      <input type="range" id="dice-slider-weight" min="0" max="100" value="55">
+    </div>
+    <div class="dice-presets">
+      <button class="dice-preset-btn active" data-preset="realistic">Realistic</button>
+      <button class="dice-preset-btn" data-preset="light">Light</button>
+      <button class="dice-preset-btn" data-preset="heavy">Heavy</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

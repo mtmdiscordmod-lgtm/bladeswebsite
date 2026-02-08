@@ -176,6 +176,8 @@ function init() {
   bindEvents();
   updateTitle();
   initDice();
+  initDiceSettings();
+  initAnimations();
 }
 
 function renderAll() {
@@ -525,9 +527,9 @@ function switchTab(tabName) {
 function bindEvents() {
   const sheet = document.querySelector('.sheet');
 
-  // Tab clicks
+  // Tab clicks (GSAP-enhanced when available)
   document.querySelectorAll('.tab[data-tab]').forEach(tab => {
-    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    tab.addEventListener('click', () => switchTabAnimated(tab.dataset.tab));
   });
 
   // Text inputs
@@ -606,10 +608,10 @@ function bindEvents() {
   sheet.addEventListener('click', e => {
     const el = e.target;
 
-    // Collapse toggle
+    // Collapse toggle (GSAP-enhanced)
     if (el.matches('.collapse-toggle')) {
       const section = el.closest('.section');
-      if (section) section.classList.toggle('collapsed');
+      if (section) toggleCollapseAnimated(section);
       return;
     }
 
@@ -1048,13 +1050,14 @@ const DICE = {
   dice: [],
   container: null,
   animFrame: null,
-  friction: 0.988,        // heavier — more momentum carry
-  bounce: 0.55,           // less bouncy — more thud
-  minVelocity: 0.15,      // lower settle so it rolls longer
+  friction: 0.967,        // realistic table friction
+  bounce: 0.24,           // barely bounces — thud
+  minVelocity: 0.3,       // stops sooner
   dieSize: 54,
   maxDice: 10,
-  snapThreshold: 3.5,     // speed below which rotation starts easing to face
-  snapStrength: 0.08,     // how hard rotation pulls toward 90°
+  snapThreshold: 5,       // start settling earlier
+  snapStrength: 0.12,     // snaps to face faster
+  throwScale: 0.014,      // throw force multiplier
 };
 
 const DIE_PATTERNS = {
@@ -1259,11 +1262,10 @@ function setupDieDrag(die) {
       var last = history[history.length - 1];
       var dt = (last.t - first.t) / 1000;
       if (dt > 0.001) {
-        var throwScale = 0.015;
         var rawVx = (last.x - first.x) / dt;
         var rawVy = (last.y - first.y) / dt;
-        die.vx = rawVx * throwScale;
-        die.vy = rawVy * throwScale;
+        die.vx = rawVx * DICE.throwScale;
+        die.vy = rawVy * DICE.throwScale;
         // 3D tumble proportional to throw direction
         die.rotSpeedX += die.vy * 4;
         die.rotSpeedY += -die.vx * 4;
@@ -1414,6 +1416,216 @@ function startPhysicsLoop() {
   if (!DICE.animFrame) {
     diceLastTime = 0;
     DICE.animFrame = requestAnimationFrame(dicePhysicsLoop);
+  }
+}
+
+/* ════════════════════════════════════════
+   DICE SETTINGS PANEL
+   ════════════════════════════════════════ */
+
+var DICE_PRESETS = {
+  realistic: { friction: 60, bounce: 25, weight: 55 },
+  light:     { friction: 20, bounce: 55, weight: 20 },
+  heavy:     { friction: 90, bounce: 10, weight: 85 },
+};
+
+function sliderToPhysics(friction, bounce, weight) {
+  DICE.friction   = 0.993 - (friction / 100) * 0.043;
+  DICE.bounce     = 0.05  + (bounce  / 100) * 0.75;
+  DICE.throwScale = 0.025 - (weight  / 100) * 0.020;
+}
+
+function initDiceSettings() {
+  var panel     = document.getElementById('dice-settings');
+  var btnOpen   = document.getElementById('btn-dice-settings');
+  var btnClose  = document.getElementById('dice-settings-close');
+  var sFriction = document.getElementById('dice-slider-friction');
+  var sBounce   = document.getElementById('dice-slider-bounce');
+  var sWeight   = document.getElementById('dice-slider-weight');
+  var vFriction = document.getElementById('dice-val-friction');
+  var vBounce   = document.getElementById('dice-val-bounce');
+  var vWeight   = document.getElementById('dice-val-weight');
+
+  // Load saved settings
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('bladesDS')); } catch(e) {}
+  if (saved) {
+    sFriction.value = saved.friction;
+    sBounce.value   = saved.bounce;
+    sWeight.value   = saved.weight;
+    if (saved.preset) highlightPreset(saved.preset);
+  }
+  applySliders();
+
+  function applySliders() {
+    var f = parseInt(sFriction.value);
+    var b = parseInt(sBounce.value);
+    var w = parseInt(sWeight.value);
+    vFriction.textContent = f;
+    vBounce.textContent   = b;
+    vWeight.textContent   = w;
+    sliderToPhysics(f, b, w);
+  }
+
+  function saveSettings(presetName) {
+    localStorage.setItem('bladesDS', JSON.stringify({
+      friction: parseInt(sFriction.value),
+      bounce:   parseInt(sBounce.value),
+      weight:   parseInt(sWeight.value),
+      preset:   presetName || '',
+    }));
+  }
+
+  function highlightPreset(name) {
+    panel.querySelectorAll('.dice-preset-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.preset === name);
+    });
+  }
+
+  function clearPresetHighlight() {
+    panel.querySelectorAll('.dice-preset-btn').forEach(function(btn) {
+      btn.classList.remove('active');
+    });
+  }
+
+  // Slider input
+  sFriction.addEventListener('input', function() { applySliders(); clearPresetHighlight(); saveSettings(); });
+  sBounce.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
+  sWeight.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
+
+  // Preset buttons
+  panel.querySelectorAll('.dice-preset-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var p = DICE_PRESETS[btn.dataset.preset];
+      if (!p) return;
+      sFriction.value = p.friction;
+      sBounce.value   = p.bounce;
+      sWeight.value   = p.weight;
+      applySliders();
+      highlightPreset(btn.dataset.preset);
+      saveSettings(btn.dataset.preset);
+    });
+  });
+
+  // Open / close
+  function togglePanel() {
+    if (panel.classList.contains('open')) {
+      if (typeof gsap !== 'undefined') {
+        gsap.to(panel, { opacity: 0, y: 10, scale: 0.95, duration: 0.25, ease: 'power2.in', onComplete: function() { panel.classList.remove('open'); } });
+      } else {
+        panel.classList.remove('open');
+        panel.style.opacity = '0';
+      }
+    } else {
+      panel.classList.add('open');
+      if (typeof gsap !== 'undefined') {
+        gsap.fromTo(panel, { opacity: 0, y: 10, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'back.out(1.7)' });
+      } else {
+        panel.style.opacity = '1';
+        panel.style.transform = 'translateY(0) scale(1)';
+      }
+    }
+  }
+
+  btnOpen.addEventListener('click', togglePanel);
+  btnClose.addEventListener('click', togglePanel);
+}
+
+/* ════════════════════════════════════════
+   GSAP ANIMATIONS — PAGE JUICE
+   ════════════════════════════════════════ */
+
+function initAnimations() {
+  if (typeof gsap === 'undefined') return;
+
+  // ── Page load entrance ──
+  var tl = gsap.timeline({ defaults: { ease: 'power3.out' }});
+  tl.from('.sheet-header', { opacity: 0, y: -20, duration: 0.5 })
+    .from('.tab-bar .tab', { opacity: 0, y: -10, duration: 0.3, stagger: 0.07 }, '-=0.25')
+    .from('.tab-panel.active', { opacity: 0, duration: 0.4 }, '-=0.1')
+    .from('.toolbar', { opacity: 0, y: 10, duration: 0.3 }, '-=0.2')
+    .from('.dice-toolbar', { opacity: 0, y: 20, duration: 0.3 }, '-=0.25');
+
+  // Stagger sections within active tab
+  gsap.from('.tab-panel.active .section, .tab-panel.active .crew-trackers, .tab-panel.active .character-info', {
+    opacity: 0, y: 15, duration: 0.35, stagger: 0.05, delay: 0.35, ease: 'power2.out'
+  });
+
+  // Stagger action rows
+  gsap.from('.tab-panel.active .action-row', {
+    opacity: 0, x: -8, duration: 0.25, stagger: 0.02, delay: 0.5, ease: 'power2.out'
+  });
+}
+
+// ── GSAP-enhanced tab switching ──
+function switchTabAnimated(tabName) {
+  if (typeof gsap === 'undefined') { switchTab(tabName); return; }
+
+  var currentPanel = document.querySelector('.tab-panel.active');
+  var newPanel = document.querySelector('.tab-panel[data-tab="' + tabName + '"]');
+  if (!newPanel || currentPanel === newPanel) return;
+
+  // Update tab buttons immediately
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+
+  gsap.to(currentPanel, {
+    opacity: 0, y: 8, duration: 0.18, ease: 'power2.in',
+    onComplete: function() {
+      currentPanel.classList.remove('active');
+      currentPanel.style.opacity = '';
+      currentPanel.style.transform = '';
+      newPanel.classList.add('active');
+
+      gsap.fromTo(newPanel,
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }
+      );
+
+      // Stagger sections in new tab
+      var targets = newPanel.querySelectorAll('.section, .crew-trackers, .factions-header, .crew-section-header, .character-info');
+      if (targets.length) {
+        gsap.from(targets, { opacity: 0, y: 12, duration: 0.3, stagger: 0.04, ease: 'power2.out' });
+      }
+    }
+  });
+}
+
+// ── GSAP-enhanced section collapse ──
+function toggleCollapseAnimated(section) {
+  var body = section.querySelector('.section-body');
+  if (!body) return;
+
+  if (typeof gsap === 'undefined') {
+    section.classList.toggle('collapsed');
+    return;
+  }
+
+  var toggle = section.querySelector('.collapse-toggle');
+
+  if (section.classList.contains('collapsed')) {
+    // Expand
+    section.classList.remove('collapsed');
+    var h = body.scrollHeight;
+    gsap.fromTo(body,
+      { height: 0, opacity: 0, overflow: 'hidden' },
+      { height: h, opacity: 1, duration: 0.3, ease: 'power2.out', clearProps: 'all' }
+    );
+    if (toggle) gsap.to(toggle, { rotation: 0, duration: 0.25, ease: 'power2.out' });
+  } else {
+    // Collapse
+    var startH = body.offsetHeight;
+    if (toggle) gsap.to(toggle, { rotation: -90, duration: 0.25, ease: 'power2.in' });
+    gsap.fromTo(body,
+      { height: startH, overflow: 'hidden' },
+      { height: 0, opacity: 0, duration: 0.25, ease: 'power2.in',
+        onComplete: function() {
+          section.classList.add('collapsed');
+          gsap.set(body, { clearProps: 'all' });
+        }
+      }
+    );
   }
 }
 
