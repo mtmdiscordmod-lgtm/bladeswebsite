@@ -859,11 +859,54 @@ textarea {
    CREW: SHADOWS
    ════════════════════════════════════════ */
 
+/* ── Tab Bar ── */
+.tab-bar {
+  display: flex;
+  gap: 0;
+  margin-bottom: 0;
+}
+
+.tab {
+  padding: 0.6rem 1.5rem;
+  border: 2px solid var(--border);
+  border-bottom: none;
+  background: var(--section-bg);
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  color: #888;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: #eee;
+}
+
+.tab.active {
+  background: var(--sheet-bg);
+  color: var(--text);
+  border-bottom: 2px solid var(--sheet-bg);
+}
+
+.tab-panel {
+  display: none;
+  border-top: 2px solid var(--border);
+  padding-top: 1rem;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
 /* ── Crew Section Container ── */
 .crew-section {
-  margin-top: 1.5rem;
-  border-top: 4px solid var(--border);
-  padding-top: 1rem;
+  padding-top: 0;
 }
 
 .crew-section-header {
@@ -1156,6 +1199,174 @@ textarea {
   min-height: 4rem;
 }
 
+/* ════════════════════════════════════════
+   FACTIONS
+   ════════════════════════════════════════ */
+
+.factions-section {
+  padding-top: 0;
+}
+
+.factions-header {
+  margin-bottom: 1rem;
+}
+
+.faction-card {
+  border: 2px solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.faction-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--section-bg);
+  border-bottom: 1px solid var(--border-light);
+  flex-wrap: wrap;
+}
+
+.faction-name-input {
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  flex: 1;
+  min-width: 150px;
+}
+
+.faction-tier-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.faction-tier-group label {
+  font-size: 0.75rem;
+}
+
+.faction-tier-group .box-track .box {
+  width: 16px;
+  height: 16px;
+}
+
+.faction-status-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.faction-status-btn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  border: 1.5px solid var(--border-light);
+  border-radius: 2px;
+  background: transparent;
+  color: #888;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.faction-status-btn:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.faction-status-btn.active[data-value="ally"] { background: #2d6a4f; color: #fff; border-color: #2d6a4f; }
+.faction-status-btn.active[data-value="friendly"] { background: #52796f; color: #fff; border-color: #52796f; }
+.faction-status-btn.active[data-value="helpful"] { background: #74a892; color: #fff; border-color: #74a892; }
+.faction-status-btn.active[data-value="neutral"] { background: #888; color: #fff; border-color: #888; }
+.faction-status-btn.active[data-value="interfering"] { background: #c77f32; color: #fff; border-color: #c77f32; }
+.faction-status-btn.active[data-value="hostile"] { background: #9c3a1a; color: #fff; border-color: #9c3a1a; }
+.faction-status-btn.active[data-value="war"] { background: #6b2737; color: #fff; border-color: #6b2737; }
+
+.faction-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--border-light);
+  font-size: 1.2rem;
+  padding: 0 0.3rem;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.faction-remove:hover {
+  color: var(--danger);
+}
+
+.faction-body {
+  padding: 0.6rem;
+}
+
+.faction-body textarea {
+  min-height: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.faction-clocks-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.faction-clock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 80px;
+}
+
+.faction-clock-item input[type="text"] {
+  width: 120px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.faction-clock-item select {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+  border: 1px solid var(--border-light);
+  border-radius: 2px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.faction-clock-svg {
+  cursor: pointer;
+  color: var(--text);
+}
+
+.faction-clock-remove {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--border-light);
+  font-size: 0.8rem;
+  transition: color 0.15s;
+}
+
+.faction-clock-remove:hover {
+  color: var(--danger);
+}
+
+.faction-clocks-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
 /* ── Print styles ── */
 @media print {
   body {
@@ -1170,11 +1381,21 @@ textarea {
   .toolbar {
     display: none;
   }
+  .tab-bar {
+    display: none;
+  }
+  .tab-panel {
+    display: block !important;
+    border-top: 2px solid var(--border);
+    padding-top: 1rem;
+  }
   .add-btn,
   .clear-btn,
   .friend-remove,
   .ability-remove,
-  .item-remove {
+  .item-remove,
+  .faction-remove,
+  .faction-clock-remove {
     display: none;
   }
 }

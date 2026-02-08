@@ -35,619 +35,652 @@
     </div>
   </header>
 
-  <!-- ═══════════ CHARACTER INFO ═══════════ -->
-  <section class="character-info">
-    <div class="info-row two-col">
-      <div class="field">
-        <label>NAME</label>
-        <input type="text" data-field="name">
-      </div>
-      <div class="field">
-        <label>ALIAS</label>
-        <input type="text" data-field="alias">
-      </div>
-    </div>
-    <div class="info-row">
-      <div class="field full">
-        <label>LOOK</label>
-        <input type="text" data-field="look">
-      </div>
-    </div>
-    <div class="info-row two-col">
-      <div class="option-group">
-        <strong>HERITAGE:</strong>
-        <span class="options" data-field="heritage">
-          <span class="option" data-value="Akoros">AKOROS</span>
-          <span class="option" data-value="The Dagger Isles">THE DAGGER ISLES</span>
-          <span class="option" data-value="Iruvia">IRUVIA</span>
-          <span class="option" data-value="Severos">SEVEROS</span>
-          <span class="option" data-value="Skovlan">SKOVLAN</span>
-          <span class="option" data-value="Tycheros">TYCHEROS</span>
-        </span>
-      </div>
-      <div class="option-group">
-        <strong>BACKGROUND:</strong>
-        <span class="options" data-field="background">
-          <span class="option" data-value="Academic">ACADEMIC</span>
-          <span class="option" data-value="Labor">LABOR</span>
-          <span class="option" data-value="Law">LAW</span>
-          <span class="option" data-value="Trade">TRADE</span>
-          <span class="option" data-value="Military">MILITARY</span>
-          <span class="option" data-value="Noble">NOBLE</span>
-          <span class="option" data-value="Underworld">UNDERWORLD</span>
-        </span>
-      </div>
-    </div>
-  </section>
+  <!-- ═══════════ TAB BAR ═══════════ -->
+  <nav class="tab-bar">
+    <button class="tab active" data-tab="character">CHARACTER</button>
+    <button class="tab" data-tab="crew">CREW</button>
+    <button class="tab" data-tab="factions">FACTIONS</button>
+  </nav>
 
-  <!-- ═══════════ MAIN BODY ═══════════ -->
-  <div class="sheet-body">
+  <!-- ═══════════ CHARACTER TAB ═══════════ -->
+  <div class="tab-panel active" data-tab="character">
 
-    <!-- ─── LEFT COLUMN ─── -->
-    <div class="sheet-left">
-
-      <!-- Special Abilities -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">SPECIAL ABILITIES <span class="collapse-toggle" title="Toggle section">&#9660;</span></h2>
-        <div class="section-body">
-          <div id="special-abilities-list" class="ability-list">
-            <!-- populated by JS -->
-          </div>
-          <button class="add-btn" data-add="ability">+ Add Ability</button>
+    <!-- ═══════════ CHARACTER INFO ═══════════ -->
+    <section class="character-info">
+      <div class="info-row two-col">
+        <div class="field">
+          <label>NAME</label>
+          <input type="text" data-field="name">
         </div>
-      </section>
-
-      <!-- Vice -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">VICE / PURVEYOR <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div class="option-group">
-            <span class="options" data-field="vice">
-              <span class="option" data-value="Faith">FAITH</span>
-              <span class="option" data-value="Gambling">GAMBLING</span>
-              <span class="option" data-value="Luxury">LUXURY</span>
-              <span class="option" data-value="Obligation">OBLIGATION</span>
-              <span class="option" data-value="Pleasure">PLEASURE</span>
-              <span class="option" data-value="Stupor">STUPOR</span>
-              <span class="option" data-value="Weird">WEIRD</span>
-            </span>
-          </div>
-          <div class="field full" style="margin-top:.5rem">
-            <label>PURVEYOR</label>
-            <input type="text" data-field="vicePurveyor">
-          </div>
+        <div class="field">
+          <label>ALIAS</label>
+          <input type="text" data-field="alias">
         </div>
-      </section>
-
-      <!-- Stress & Trauma -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">STRESS &amp; TRAUMA <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div class="stress-trauma-row">
-            <div class="track-group">
-              <label class="track-label">STRESS</label>
-              <div class="box-track" data-track="stress" data-max="9"></div>
-            </div>
-            <div class="track-group">
-              <label class="track-label">TRAUMA</label>
-              <div class="box-track" data-track="trauma" data-max="4"></div>
-            </div>
-          </div>
-          <div class="option-group" style="margin-top:.5rem">
-            <span class="options multi" data-field="traumaConditions">
-              <span class="option" data-value="Cold">COLD</span>
-              <span class="option" data-value="Haunted">HAUNTED</span>
-              <span class="option" data-value="Obsessed">OBSESSED</span>
-              <span class="option" data-value="Paranoid">PARANOID</span>
-              <span class="option" data-value="Reckless">RECKLESS</span>
-              <span class="option" data-value="Soft">SOFT</span>
-              <span class="option" data-value="Unstable">UNSTABLE</span>
-              <span class="option" data-value="Vicious">VICIOUS</span>
-            </span>
-          </div>
+      </div>
+      <div class="info-row">
+        <div class="field full">
+          <label>LOOK</label>
+          <input type="text" data-field="look">
         </div>
-      </section>
+      </div>
+      <div class="info-row two-col">
+        <div class="option-group">
+          <strong>HERITAGE:</strong>
+          <span class="options" data-field="heritage">
+            <span class="option" data-value="Akoros">AKOROS</span>
+            <span class="option" data-value="The Dagger Isles">THE DAGGER ISLES</span>
+            <span class="option" data-value="Iruvia">IRUVIA</span>
+            <span class="option" data-value="Severos">SEVEROS</span>
+            <span class="option" data-value="Skovlan">SKOVLAN</span>
+            <span class="option" data-value="Tycheros">TYCHEROS</span>
+          </span>
+        </div>
+        <div class="option-group">
+          <strong>BACKGROUND:</strong>
+          <span class="options" data-field="background">
+            <span class="option" data-value="Academic">ACADEMIC</span>
+            <span class="option" data-value="Labor">LABOR</span>
+            <span class="option" data-value="Law">LAW</span>
+            <span class="option" data-value="Trade">TRADE</span>
+            <span class="option" data-value="Military">MILITARY</span>
+            <span class="option" data-value="Noble">NOBLE</span>
+            <span class="option" data-value="Underworld">UNDERWORLD</span>
+          </span>
+        </div>
+      </div>
+    </section>
 
-      <!-- Harm -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">HARM <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div class="harm-grid">
-            <div class="harm-row">
-              <span class="harm-level">3</span>
-              <input type="text" class="harm-input" data-field="harm3" placeholder="Fatal">
-              <span class="harm-effect">NEED HELP</span>
+    <!-- ═══════════ MAIN BODY ═══════════ -->
+    <div class="sheet-body">
+
+      <!-- ─── LEFT COLUMN ─── -->
+      <div class="sheet-left">
+
+        <!-- Special Abilities -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">SPECIAL ABILITIES <span class="collapse-toggle" title="Toggle section">&#9660;</span></h2>
+          <div class="section-body">
+            <div id="special-abilities-list" class="ability-list">
+              <!-- populated by JS -->
             </div>
-            <div class="harm-row">
-              <span class="harm-level">2</span>
-              <input type="text" class="harm-input" data-field="harm2a">
-              <input type="text" class="harm-input" data-field="harm2b">
-              <span class="harm-effect">-1D</span>
+            <button class="add-btn" data-add="ability">+ Add Ability</button>
+          </div>
+        </section>
+
+        <!-- Vice -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">VICE / PURVEYOR <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="option-group">
+              <span class="options" data-field="vice">
+                <span class="option" data-value="Faith">FAITH</span>
+                <span class="option" data-value="Gambling">GAMBLING</span>
+                <span class="option" data-value="Luxury">LUXURY</span>
+                <span class="option" data-value="Obligation">OBLIGATION</span>
+                <span class="option" data-value="Pleasure">PLEASURE</span>
+                <span class="option" data-value="Stupor">STUPOR</span>
+                <span class="option" data-value="Weird">WEIRD</span>
+              </span>
             </div>
-            <div class="harm-row">
-              <span class="harm-level">1</span>
-              <input type="text" class="harm-input" data-field="harm1a">
-              <input type="text" class="harm-input" data-field="harm1b">
-              <span class="harm-effect">LESS EFFECT</span>
+            <div class="field full" style="margin-top:.5rem">
+              <label>PURVEYOR</label>
+              <input type="text" data-field="vicePurveyor">
             </div>
           </div>
+        </section>
 
-          <div class="healing-armor-row">
-            <div class="healing-group">
-              <label class="track-label">HEALING</label>
-              <svg class="clock" data-clock="healingClock" data-segments="4" viewBox="0 0 44 44" width="48" height="48">
-                <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" stroke-width="2"/>
-                <line x1="22" y1="2" x2="22" y2="42" stroke="currentColor" stroke-width="1"/>
-                <line x1="2" y1="22" x2="42" y2="22" stroke="currentColor" stroke-width="1"/>
-                <path d="M22,22 L22,2 A20,20 0 0,1 42,22 Z" class="clock-seg" data-seg="0"/>
-                <path d="M22,22 L42,22 A20,20 0 0,1 22,42 Z" class="clock-seg" data-seg="1"/>
-                <path d="M22,22 L22,42 A20,20 0 0,1 2,22 Z" class="clock-seg" data-seg="2"/>
-                <path d="M22,22 L2,22 A20,20 0 0,1 22,2 Z" class="clock-seg" data-seg="3"/>
-              </svg>
+        <!-- Stress & Trauma -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">STRESS &amp; TRAUMA <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="stress-trauma-row">
+              <div class="track-group">
+                <label class="track-label">STRESS</label>
+                <div class="box-track" data-track="stress" data-max="9"></div>
+              </div>
+              <div class="track-group">
+                <label class="track-label">TRAUMA</label>
+                <div class="box-track" data-track="trauma" data-max="4"></div>
+              </div>
             </div>
-            <div class="armor-group">
-              <label class="track-label">ARMOR</label>
-              <div class="armor-checks">
-                <label class="armor-check"><input type="checkbox" data-field="armor"> ARMOR</label>
-                <label class="armor-check"><input type="checkbox" data-field="heavyArmor"> HEAVY</label>
-                <label class="armor-check"><input type="checkbox" data-field="specialArmor"> SPECIAL</label>
+            <div class="option-group" style="margin-top:.5rem">
+              <span class="options multi" data-field="traumaConditions">
+                <span class="option" data-value="Cold">COLD</span>
+                <span class="option" data-value="Haunted">HAUNTED</span>
+                <span class="option" data-value="Obsessed">OBSESSED</span>
+                <span class="option" data-value="Paranoid">PARANOID</span>
+                <span class="option" data-value="Reckless">RECKLESS</span>
+                <span class="option" data-value="Soft">SOFT</span>
+                <span class="option" data-value="Unstable">UNSTABLE</span>
+                <span class="option" data-value="Vicious">VICIOUS</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Harm -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">HARM <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="harm-grid">
+              <div class="harm-row">
+                <span class="harm-level">3</span>
+                <input type="text" class="harm-input" data-field="harm3" placeholder="Fatal">
+                <span class="harm-effect">NEED HELP</span>
+              </div>
+              <div class="harm-row">
+                <span class="harm-level">2</span>
+                <input type="text" class="harm-input" data-field="harm2a">
+                <input type="text" class="harm-input" data-field="harm2b">
+                <span class="harm-effect">-1D</span>
+              </div>
+              <div class="harm-row">
+                <span class="harm-level">1</span>
+                <input type="text" class="harm-input" data-field="harm1a">
+                <input type="text" class="harm-input" data-field="harm1b">
+                <span class="harm-effect">LESS EFFECT</span>
+              </div>
+            </div>
+
+            <div class="healing-armor-row">
+              <div class="healing-group">
+                <label class="track-label">HEALING</label>
+                <svg class="clock" data-clock="healingClock" data-segments="4" viewBox="0 0 44 44" width="48" height="48">
+                  <circle cx="22" cy="22" r="20" fill="none" stroke="currentColor" stroke-width="2"/>
+                  <line x1="22" y1="2" x2="22" y2="42" stroke="currentColor" stroke-width="1"/>
+                  <line x1="2" y1="22" x2="42" y2="22" stroke="currentColor" stroke-width="1"/>
+                  <path d="M22,22 L22,2 A20,20 0 0,1 42,22 Z" class="clock-seg" data-seg="0"/>
+                  <path d="M22,22 L42,22 A20,20 0 0,1 22,42 Z" class="clock-seg" data-seg="1"/>
+                  <path d="M22,22 L22,42 A20,20 0 0,1 2,22 Z" class="clock-seg" data-seg="2"/>
+                  <path d="M22,22 L2,22 A20,20 0 0,1 22,2 Z" class="clock-seg" data-seg="3"/>
+                </svg>
+              </div>
+              <div class="armor-group">
+                <label class="track-label">ARMOR</label>
+                <div class="armor-checks">
+                  <label class="armor-check"><input type="checkbox" data-field="armor"> ARMOR</label>
+                  <label class="armor-check"><input type="checkbox" data-field="heavyArmor"> HEAVY</label>
+                  <label class="armor-check"><input type="checkbox" data-field="specialArmor"> SPECIAL</label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- Friends -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">FRIENDS &amp; CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div id="friends-list" class="friends-list">
-            <!-- populated by JS -->
-          </div>
-          <button class="add-btn" data-add="friend">+ Add Contact</button>
-        </div>
-      </section>
-
-      <!-- Notes -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">NOTES <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <textarea id="notes" data-field="notes" rows="6" placeholder="Write notes here..."></textarea>
-        </div>
-      </section>
-
-    </div>
-
-    <!-- ─── RIGHT COLUMN ─── -->
-    <div class="sheet-right">
-
-      <!-- Stash & Coin -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">STASH &amp; COIN <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div class="track-group">
-            <label class="track-label">STASH <span class="track-value" data-display="stash">0</span>/40</label>
-            <div class="box-track stash-track" data-track="stash" data-max="40"></div>
-          </div>
-          <div class="track-group" style="margin-top:.75rem">
-            <label class="track-label">COIN <span class="track-value" data-display="coin">0</span>/4</label>
-            <div class="box-track" data-track="coin" data-max="4"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Playbook XP -->
-      <div class="track-group xp-inline">
-        <label class="track-label">PLAYBOOK XP</label>
-        <div class="xp-track" data-track="playbookXp" data-max="8"></div>
-        <button class="clear-btn" data-clear="playbookXp" title="Clear track">&#x21bb;</button>
-      </div>
-
-      <!-- Insight -->
-      <section class="section action-section" data-collapsible>
-        <h2 class="section-head">INSIGHT
-          <span class="xp-track-inline" data-track="insightXp" data-max="6"></span>
-          <button class="clear-btn" data-clear="insightXp" title="Clear track">&#x21bb;</button>
-          <span class="collapse-toggle">&#9660;</span>
-        </h2>
-        <div class="section-body">
-          <div class="action-row" data-action="hunt"><span class="dots" data-max="4"></span><span class="action-name">HUNT</span></div>
-          <div class="action-row" data-action="study"><span class="dots" data-max="4"></span><span class="action-name">STUDY</span></div>
-          <div class="action-row" data-action="survey"><span class="dots" data-max="4"></span><span class="action-name">SURVEY</span></div>
-          <div class="action-row" data-action="tinker"><span class="dots" data-max="4"></span><span class="action-name">TINKER</span></div>
-        </div>
-      </section>
-
-      <!-- Prowess -->
-      <section class="section action-section" data-collapsible>
-        <h2 class="section-head">PROWESS
-          <span class="xp-track-inline" data-track="prowessXp" data-max="6"></span>
-          <button class="clear-btn" data-clear="prowessXp" title="Clear track">&#x21bb;</button>
-          <span class="collapse-toggle">&#9660;</span>
-        </h2>
-        <div class="section-body">
-          <div class="action-row" data-action="finesse"><span class="dots" data-max="4"></span><span class="action-name">FINESSE</span></div>
-          <div class="action-row" data-action="prowl"><span class="dots" data-max="4"></span><span class="action-name">PROWL</span></div>
-          <div class="action-row" data-action="skirmish"><span class="dots" data-max="4"></span><span class="action-name">SKIRMISH</span></div>
-          <div class="action-row" data-action="wreck"><span class="dots" data-max="4"></span><span class="action-name">WRECK</span></div>
-        </div>
-      </section>
-
-      <!-- Resolve -->
-      <section class="section action-section" data-collapsible>
-        <h2 class="section-head">RESOLVE
-          <span class="xp-track-inline" data-track="resolveXp" data-max="6"></span>
-          <button class="clear-btn" data-clear="resolveXp" title="Clear track">&#x21bb;</button>
-          <span class="collapse-toggle">&#9660;</span>
-        </h2>
-        <div class="section-body">
-          <div class="action-row" data-action="attune"><span class="dots" data-max="4"></span><span class="action-name">ATTUNE</span></div>
-          <div class="action-row" data-action="command"><span class="dots" data-max="4"></span><span class="action-name">COMMAND</span></div>
-          <div class="action-row" data-action="consort"><span class="dots" data-max="4"></span><span class="action-name">CONSORT</span></div>
-          <div class="action-row" data-action="sway"><span class="dots" data-max="4"></span><span class="action-name">SWAY</span></div>
-        </div>
-      </section>
-
-      <!-- Bonus Die -->
-      <section class="section bonus-die-section">
-        <h2 class="section-head">BONUS DIE</h2>
-        <div class="section-body">
-          <p class="bonus-text"><strong>PUSH YOURSELF</strong> (take 2 stress) <em>-OR-</em> accept a <strong>DEVIL'S BARGAIN</strong></p>
-        </div>
-      </section>
-
-      <!-- Items & Load -->
-      <section class="section" data-collapsible>
-        <h2 class="section-head">ITEMS &amp; LOAD <span class="collapse-toggle">&#9660;</span></h2>
-        <div class="section-body">
-          <div class="load-selector">
-            <label class="load-option">
-              <input type="radio" name="load" data-field="loadLevel" value="light">
-              <span class="load-diamond">&#9671;</span> <strong>3</strong> light
-            </label>
-            <label class="load-option">
-              <input type="radio" name="load" data-field="loadLevel" value="normal">
-              <span class="load-diamond">&#9671;</span> <strong>5</strong> normal
-            </label>
-            <label class="load-option">
-              <input type="radio" name="load" data-field="loadLevel" value="heavy">
-              <span class="load-diamond">&#9671;</span> <strong>6</strong> heavy
-            </label>
-          </div>
-          <div class="load-meter">
-            <span class="load-current" id="load-current">0</span> / <span class="load-max" id="load-max">0</span> load used
-          </div>
-          <div id="items-list" class="items-list">
-            <!-- populated by JS -->
-          </div>
-          <button class="add-btn" data-add="item">+ Add Item</button>
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-  <!-- ═══════════ CREW: SHADOWS ═══════════ -->
-  <div class="crew-section">
-
-    <div class="crew-section-header">
-      <h2 class="crew-title">SHADOWS</h2>
-      <p class="crew-subtitle"><em>Thieves and spies</em></p>
-      <p class="crew-xp-trigger">&#9670; <strong>XP Trigger:</strong> You earn xp when you execute a <strong>burglary</strong>, <strong>espionage</strong>, <strong>robbery</strong>, or <strong>sabotage</strong> operation.</p>
-    </div>
-
-    <!-- Crew Trackers -->
-    <div class="crew-trackers">
-      <div class="crew-trackers-col">
-        <div class="track-group">
-          <label class="track-label">REP <span class="track-value" data-display="rep">0</span>/12</label>
-          <div class="box-track" data-track="rep" data-max="12"></div>
-        </div>
-        <div class="track-group">
-          <label class="track-label">HEAT <span class="track-value" data-display="heat">0</span>/9</label>
-          <div class="box-track" data-track="heat" data-max="9"></div>
-        </div>
-        <div class="track-group crew-xp-group">
-          <label class="track-label">CREW XP</label>
-          <div class="xp-track" data-track="crewXp" data-max="8"></div>
-          <button class="clear-btn" data-clear="crewXp" title="Clear track">&#x21bb;</button>
-        </div>
-      </div>
-      <div class="crew-trackers-col">
-        <div class="track-group">
-          <label class="track-label">TIER</label>
-          <div class="box-track" data-track="crewTier" data-max="4"></div>
-        </div>
-        <div class="track-group">
-          <label class="track-label">HOLD</label>
-          <span class="options" data-field="hold">
-            <span class="option" data-value="strong">STRONG</span>
-            <span class="option" data-value="weak">WEAK</span>
-          </span>
-        </div>
-        <div class="track-group">
-          <label class="track-label">WANTED LEVEL</label>
-          <div class="box-track" data-track="wantedLevel" data-max="4"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Claims Map (full width) ── -->
-    <section class="section" data-collapsible>
-      <h2 class="section-head">SHADOWS CLAIMS <span class="collapse-toggle">&#9660;</span></h2>
-      <div class="section-body">
-        <div class="claims-grid" id="claims-grid">
-          <!-- Row 1 -->
-          <div class="claim" data-claim="claim_interrogation_chamber"><span class="claim-name">INTERROGATION CHAMBER</span></div>
-          <div class="claim" data-claim="claim_turf_1"><span class="claim-name">TURF</span></div>
-          <div class="claim" data-claim="claim_loyal_fence"><span class="claim-name">LOYAL FENCE</span></div>
-          <div class="claim" data-claim="claim_gambling_den"><span class="claim-name">GAMBLING DEN</span></div>
-          <div class="claim" data-claim="claim_tavern"><span class="claim-name">TAVERN</span></div>
-          <!-- Row 2 -->
-          <div class="claim" data-claim="claim_drug_den"><span class="claim-name">DRUG DEN</span></div>
-          <div class="claim" data-claim="claim_informants"><span class="claim-name">INFORMANTS</span></div>
-          <div class="claim claim--lair" data-claim="claim_lair"><span class="claim-name">LAIR</span></div>
-          <div class="claim" data-claim="claim_turf_2"><span class="claim-name">TURF</span></div>
-          <div class="claim" data-claim="claim_lookouts"><span class="claim-name">LOOKOUTS</span></div>
-          <!-- Row 3 -->
-          <div class="claim" data-claim="claim_hagfish_farm"><span class="claim-name">HAGFISH FARM</span></div>
-          <div class="claim" data-claim="claim_infirmary"><span class="claim-name">INFIRMARY</span></div>
-          <div class="claim" data-claim="claim_covert_drop"><span class="claim-name">COVERT DROP</span></div>
-          <div class="claim" data-claim="claim_turf_3"><span class="claim-name">TURF</span></div>
-          <div class="claim" data-claim="claim_secret_pathways"><span class="claim-name">SECRET PATHWAYS</span></div>
-        </div>
-        <div class="claims-descriptions">
-          <div class="claims-desc-grid">
-            <p><strong>Covert Drop:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve espionage or sabotage.</p>
-            <p><strong>Informants:</strong> You get <strong>+1d</strong> to gather information for a score.</p>
-            <p><strong>Drug Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
-            <p><strong>Interrogation Chamber:</strong> You get <strong>+1d</strong> to <strong>Command</strong> and <strong>Sway</strong> on-site.</p>
-            <p><strong>Gambling Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
-            <p><strong>Lookouts:</strong> You get <strong>+1d</strong> to <strong>Hunt</strong> or <strong>Survey</strong> on your turf.</p>
-            <p><strong>Hagfish Farm:</strong> When you use the <strong>reduce heat</strong> downtime activity after a score that involves killing, you get <strong>+1d</strong>.</p>
-            <p><strong>Loyal Fence:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve burglary or robbery.</p>
-            <p><strong>Infirmary:</strong> You get <strong>+1d</strong> to healing treatment rolls.</p>
-            <p><strong>Secret Pathways:</strong> You get <strong>+1d</strong> to the <strong>engagement roll</strong> for <strong>stealth</strong> plans.</p>
-            <p><strong>Tavern:</strong> You get <strong>+1d</strong> to <strong>Consort</strong> and <strong>Sway</strong> rolls on-site.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Lair Details ── -->
-    <section class="section" data-collapsible>
-      <h2 class="section-head">LAIR DETAILS <span class="collapse-toggle">&#9660;</span></h2>
-      <div class="section-body">
-        <div class="lair-fields">
-          <div class="field">
-            <label>NAME</label>
-            <input type="text" data-field="lairName" placeholder="e.g. The Dusty Cellar">
-          </div>
-          <div class="field">
-            <label>LOCATION</label>
-            <input type="text" data-field="lairLocation" placeholder="e.g. Crow's Foot, under the old tannery">
-          </div>
-          <textarea data-field="lairNotes" rows="4" placeholder="Lair notes — describe your lair, defenses, hidden features, secret entrances..."></textarea>
-        </div>
-      </div>
-    </section>
-
-    <div class="crew-body">
-
-      <!-- Crew Left Column -->
-      <div class="crew-left">
-
-        <!-- Hunting Grounds -->
-        <section class="section" data-collapsible>
-          <h2 class="section-head">HUNTING GROUNDS <span class="collapse-toggle">&#9660;</span></h2>
-          <div class="section-body">
-            <p class="section-note">Choose a favored operation type:</p>
-            <div class="option-group">
-              <span class="options" data-field="huntingGround">
-                <span class="option" data-value="Burglary">BURGLARY</span>
-                <span class="option" data-value="Espionage">ESPIONAGE</span>
-                <span class="option" data-value="Robbery">ROBBERY</span>
-                <span class="option" data-value="Sabotage">SABOTAGE</span>
-              </span>
-            </div>
-            <div class="hunting-descriptions">
-              <p><strong>Burglary:</strong> Theft by breaking and entering.</p>
-              <p><strong>Espionage:</strong> Obtain secret information by covert or clandestine means.</p>
-              <p><strong>Robbery:</strong> Theft by force or threats.</p>
-              <p><strong>Sabotage:</strong> Hurt an opponent by destroying something.</p>
-            </div>
-          </div>
         </section>
 
-        <!-- Crew Contacts -->
+        <!-- Friends -->
         <section class="section" data-collapsible>
-          <h2 class="section-head">CREW CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
+          <h2 class="section-head">FRIENDS &amp; CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
           <div class="section-body">
-            <div id="crew-contacts-list" class="friends-list">
+            <div id="friends-list" class="friends-list">
               <!-- populated by JS -->
             </div>
-            <button class="add-btn" data-add="crewContact">+ Add Contact</button>
+            <button class="add-btn" data-add="friend">+ Add Contact</button>
           </div>
         </section>
 
-        <!-- Shadows Upgrades -->
+        <!-- Notes -->
         <section class="section" data-collapsible>
-          <h2 class="section-head">SHADOWS UPGRADES <span class="collapse-toggle">&#9660;</span></h2>
+          <h2 class="section-head">NOTES <span class="collapse-toggle">&#9660;</span></h2>
           <div class="section-body">
-            <p class="section-note starting-upgrades">Starting: <strong>Training: Prowess</strong> &bull; <strong>Lair: Hidden</strong></p>
-            <div class="upgrade-list">
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="upgrade_thiefRigging">
-                <span><strong>Thief Rigging:</strong> You get 2 free load worth of tool or gear items.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="upgrade_undergroundMaps">
-                <span><strong>Underground Maps and Passkeys:</strong> Easy passage through the underground canals, tunnels, and basements of the city.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="upgrade_eliteRooks">
-                <span><strong>Elite Rooks:</strong> All Rooks cohorts get <strong>+1d</strong> to quality rolls for Rook-related actions.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="upgrade_eliteSkulks">
-                <span><strong>Elite Skulks:</strong> All Skulks cohorts get <strong>+1d</strong> to quality rolls for Skulk-related actions.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="upgrade_steady">
-                <span><strong>Steady:</strong> Each PC gets <strong>+1 stress box</strong>. <em>(Costs 3 upgrades to unlock.)</em></span>
-              </label>
-            </div>
+            <textarea id="notes" data-field="notes" rows="6" placeholder="Write notes here..."></textarea>
           </div>
         </section>
 
       </div>
 
-      <!-- Crew Right Column -->
-      <div class="crew-right">
+      <!-- ─── RIGHT COLUMN ─── -->
+      <div class="sheet-right">
 
-        <!-- Shadows Special Abilities -->
+        <!-- Stash & Coin -->
         <section class="section" data-collapsible>
-          <h2 class="section-head">SHADOWS ABILITIES <span class="collapse-toggle">&#9660;</span></h2>
+          <h2 class="section-head">STASH &amp; COIN <span class="collapse-toggle">&#9660;</span></h2>
           <div class="section-body">
-            <div class="crew-ability-list">
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_everyoneSteals">
-                <span><strong>Everyone Steals:</strong> Each PC may add +1 action rating to <strong>Prowl</strong>, <strong>Finesse</strong>, or <strong>Tinker</strong> (up to max 3).</span>
+            <div class="track-group">
+              <label class="track-label">STASH <span class="track-value" data-display="stash">0</span>/40</label>
+              <div class="box-track stash-track" data-track="stash" data-max="40"></div>
+            </div>
+            <div class="track-group" style="margin-top:.75rem">
+              <label class="track-label">COIN <span class="track-value" data-display="coin">0</span>/4</label>
+              <div class="box-track" data-track="coin" data-max="4"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Playbook XP -->
+        <div class="track-group xp-inline">
+          <label class="track-label">PLAYBOOK XP</label>
+          <div class="xp-track" data-track="playbookXp" data-max="8"></div>
+          <button class="clear-btn" data-clear="playbookXp" title="Clear track">&#x21bb;</button>
+        </div>
+
+        <!-- Insight -->
+        <section class="section action-section" data-collapsible>
+          <h2 class="section-head">INSIGHT
+            <span class="xp-track-inline" data-track="insightXp" data-max="6"></span>
+            <button class="clear-btn" data-clear="insightXp" title="Clear track">&#x21bb;</button>
+            <span class="collapse-toggle">&#9660;</span>
+          </h2>
+          <div class="section-body">
+            <div class="action-row" data-action="hunt"><span class="dots" data-max="4"></span><span class="action-name">HUNT</span></div>
+            <div class="action-row" data-action="study"><span class="dots" data-max="4"></span><span class="action-name">STUDY</span></div>
+            <div class="action-row" data-action="survey"><span class="dots" data-max="4"></span><span class="action-name">SURVEY</span></div>
+            <div class="action-row" data-action="tinker"><span class="dots" data-max="4"></span><span class="action-name">TINKER</span></div>
+          </div>
+        </section>
+
+        <!-- Prowess -->
+        <section class="section action-section" data-collapsible>
+          <h2 class="section-head">PROWESS
+            <span class="xp-track-inline" data-track="prowessXp" data-max="6"></span>
+            <button class="clear-btn" data-clear="prowessXp" title="Clear track">&#x21bb;</button>
+            <span class="collapse-toggle">&#9660;</span>
+          </h2>
+          <div class="section-body">
+            <div class="action-row" data-action="finesse"><span class="dots" data-max="4"></span><span class="action-name">FINESSE</span></div>
+            <div class="action-row" data-action="prowl"><span class="dots" data-max="4"></span><span class="action-name">PROWL</span></div>
+            <div class="action-row" data-action="skirmish"><span class="dots" data-max="4"></span><span class="action-name">SKIRMISH</span></div>
+            <div class="action-row" data-action="wreck"><span class="dots" data-max="4"></span><span class="action-name">WRECK</span></div>
+          </div>
+        </section>
+
+        <!-- Resolve -->
+        <section class="section action-section" data-collapsible>
+          <h2 class="section-head">RESOLVE
+            <span class="xp-track-inline" data-track="resolveXp" data-max="6"></span>
+            <button class="clear-btn" data-clear="resolveXp" title="Clear track">&#x21bb;</button>
+            <span class="collapse-toggle">&#9660;</span>
+          </h2>
+          <div class="section-body">
+            <div class="action-row" data-action="attune"><span class="dots" data-max="4"></span><span class="action-name">ATTUNE</span></div>
+            <div class="action-row" data-action="command"><span class="dots" data-max="4"></span><span class="action-name">COMMAND</span></div>
+            <div class="action-row" data-action="consort"><span class="dots" data-max="4"></span><span class="action-name">CONSORT</span></div>
+            <div class="action-row" data-action="sway"><span class="dots" data-max="4"></span><span class="action-name">SWAY</span></div>
+          </div>
+        </section>
+
+        <!-- Bonus Die -->
+        <section class="section bonus-die-section">
+          <h2 class="section-head">BONUS DIE</h2>
+          <div class="section-body">
+            <p class="bonus-text"><strong>PUSH YOURSELF</strong> (take 2 stress) <em>-OR-</em> accept a <strong>DEVIL'S BARGAIN</strong></p>
+          </div>
+        </section>
+
+        <!-- Items & Load -->
+        <section class="section" data-collapsible>
+          <h2 class="section-head">ITEMS &amp; LOAD <span class="collapse-toggle">&#9660;</span></h2>
+          <div class="section-body">
+            <div class="load-selector">
+              <label class="load-option">
+                <input type="radio" name="load" data-field="loadLevel" value="light">
+                <span class="load-diamond">&#9671;</span> <strong>3</strong> light
               </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_ghostEchoes">
-                <span><strong>Ghost Echoes:</strong> All crew members can see and interact with the ghostly structures, streets, and objects within the echo of Doskvol in the ghost field.</span>
+              <label class="load-option">
+                <input type="radio" name="load" data-field="loadLevel" value="normal">
+                <span class="load-diamond">&#9671;</span> <strong>5</strong> normal
               </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_packRats">
-                <span><strong>Pack Rats:</strong> Your lair is a jumble of stolen items. When you roll to <strong>acquire an asset</strong>, take <strong>+1d</strong>.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_patron">
-                <span><strong>Patron:</strong> When you advance your Tier, it costs <strong>half the coin</strong> it normally would.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_secondStory">
-                <span><strong>Second Story:</strong> When you execute a clandestine infiltration, you get <strong>+1d</strong> to the <strong>engagement roll</strong>.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_slippery">
-                <span><strong>Slippery:</strong> When you roll <strong>entanglements</strong>, roll twice and keep the one you want. When you <strong>reduce heat</strong>, take <strong>+1d</strong>.</span>
-              </label>
-              <label class="upgrade-check">
-                <input type="checkbox" data-field="crewAbility_synchronized">
-                <span><strong>Synchronized:</strong> When you perform a <strong>group action</strong>, you may count multiple 6s from different rolls as a <strong>critical</strong> success.</span>
+              <label class="load-option">
+                <input type="radio" name="load" data-field="loadLevel" value="heavy">
+                <span class="load-diamond">&#9671;</span> <strong>6</strong> heavy
               </label>
             </div>
+            <div class="load-meter">
+              <span class="load-current" id="load-current">0</span> / <span class="load-max" id="load-max">0</span> load used
+            </div>
+            <div id="items-list" class="items-list">
+              <!-- populated by JS -->
+            </div>
+            <button class="add-btn" data-add="item">+ Add Item</button>
           </div>
         </section>
 
       </div>
     </div>
 
-    <!-- Score Opportunities (full width, book style) -->
-    <section class="section" data-collapsible>
-      <h2 class="section-head">SCORE OPPORTUNITIES <span class="collapse-toggle">&#9660;</span></h2>
-      <div class="section-body">
-        <table class="opp-table">
-          <tbody>
-            <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
-            <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
-            <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
-          </tbody>
-          <tbody>
-            <tr class="opp-divider"><td colspan="2"></td></tr>
-            <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
-            <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
-            <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
-          </tbody>
-          <tbody>
-            <tr class="opp-divider"><td colspan="2"></td></tr>
-            <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
-            <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
-            <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
-            <tr class="opp-shaded"><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive? <span class="opp-tags"><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
-          </tbody>
-        </table>
-        <p class="opp-footer"><em>For any opportunity above, consider a Burglary, Espionage, Robbery or Sabotage operation. To twist an opportunity or add additional elements, roll on the score generator tables.</em></p>
-      </div>
-    </section>
+    <!-- ═══════════ BOTTOM SECTIONS ═══════════ -->
+    <div class="sheet-bottom">
 
-  </div>
-
-  <!-- ═══════════ BOTTOM SECTIONS ═══════════ -->
-  <div class="sheet-bottom">
-
-    <!-- XP -->
-    <section class="section" data-collapsible>
-      <h2 class="section-head">XP &amp; END OF SESSION <span class="collapse-toggle">&#9660;</span></h2>
-      <div class="section-body">
-        <p class="xp-rule">&#9670; Every time you roll a <em>desperate</em> action, mark xp in that action's attribute.</p>
-        <p class="xp-rule">At the end of each session, for each item below, mark 1 xp (in your playbook or an attribute) or 2xp if that item occurred multiple times.</p>
-        <div class="xp-questions">
-          <div class="field full">
-            <label>&#9670; You addressed a challenge with ___</label>
-            <input type="text" data-field="xpChallenge">
-          </div>
-          <p class="xp-rule">&#9670; You expressed your beliefs, drives, heritage, or background.</p>
-          <p class="xp-rule">&#9670; You struggled with issues from your vice or traumas during the session.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Reference -->
-    <section class="section" data-collapsible>
-      <h2 class="section-head">REFERENCE <span class="collapse-toggle">&#9660;</span></h2>
-      <div class="section-body">
-        <div class="reference-grid">
-          <div class="ref-block">
-            <h3>TEAMWORK</h3>
-            <ul>
-              <li><strong>Assist</strong> a teammate</li>
-              <li><strong>Lead</strong> a group action</li>
-              <li><strong>Protect</strong> a teammate</li>
-              <li><strong>Set up</strong> a teammate</li>
-            </ul>
-          </div>
-          <div class="ref-block">
-            <h3>PLANNING &amp; LOAD</h3>
-            <p>Choose a plan, provide the <em>detail</em>. Choose your <em>load</em> limit for the operation.</p>
-            <table class="ref-table">
-              <tr><td><strong>Assault:</strong> <em>Point of attack</em></td><td><strong>Occult:</strong> <em>Arcane power</em></td></tr>
-              <tr><td><strong>Deception:</strong> <em>Method</em></td><td><strong>Social:</strong> <em>Connection</em></td></tr>
-              <tr><td><strong>Stealth:</strong> <em>Entry point</em></td><td><strong>Transport:</strong> <em>Route</em></td></tr>
-            </table>
-          </div>
-          <div class="ref-block">
-            <h3>GATHER INFORMATION</h3>
-            <ul>
-              <li>&#9670; What do they intend to do?</li>
-              <li>&#9670; How can I get them to [X]?</li>
-              <li>&#9670; What are they really feeling?</li>
-              <li>&#9670; What should I lookout for?</li>
-              <li>&#9670; Where's the weakness here?</li>
-              <li>&#9670; How can I find [X]?</li>
-              <li>&#9670; What's really going on here?</li>
-            </ul>
+      <!-- XP -->
+      <section class="section" data-collapsible>
+        <h2 class="section-head">XP &amp; END OF SESSION <span class="collapse-toggle">&#9660;</span></h2>
+        <div class="section-body">
+          <p class="xp-rule">&#9670; Every time you roll a <em>desperate</em> action, mark xp in that action's attribute.</p>
+          <p class="xp-rule">At the end of each session, for each item below, mark 1 xp (in your playbook or an attribute) or 2xp if that item occurred multiple times.</p>
+          <div class="xp-questions">
+            <div class="field full">
+              <label>&#9670; You addressed a challenge with ___</label>
+              <input type="text" data-field="xpChallenge">
+            </div>
+            <p class="xp-rule">&#9670; You expressed your beliefs, drives, heritage, or background.</p>
+            <p class="xp-rule">&#9670; You struggled with issues from your vice or traumas during the session.</p>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-  </div>
+      <!-- Reference -->
+      <section class="section" data-collapsible>
+        <h2 class="section-head">REFERENCE <span class="collapse-toggle">&#9660;</span></h2>
+        <div class="section-body">
+          <div class="reference-grid">
+            <div class="ref-block">
+              <h3>TEAMWORK</h3>
+              <ul>
+                <li><strong>Assist</strong> a teammate</li>
+                <li><strong>Lead</strong> a group action</li>
+                <li><strong>Protect</strong> a teammate</li>
+                <li><strong>Set up</strong> a teammate</li>
+              </ul>
+            </div>
+            <div class="ref-block">
+              <h3>PLANNING &amp; LOAD</h3>
+              <p>Choose a plan, provide the <em>detail</em>. Choose your <em>load</em> limit for the operation.</p>
+              <table class="ref-table">
+                <tr><td><strong>Assault:</strong> <em>Point of attack</em></td><td><strong>Occult:</strong> <em>Arcane power</em></td></tr>
+                <tr><td><strong>Deception:</strong> <em>Method</em></td><td><strong>Social:</strong> <em>Connection</em></td></tr>
+                <tr><td><strong>Stealth:</strong> <em>Entry point</em></td><td><strong>Transport:</strong> <em>Route</em></td></tr>
+              </table>
+            </div>
+            <div class="ref-block">
+              <h3>GATHER INFORMATION</h3>
+              <ul>
+                <li>&#9670; What do they intend to do?</li>
+                <li>&#9670; How can I get them to [X]?</li>
+                <li>&#9670; What are they really feeling?</li>
+                <li>&#9670; What should I lookout for?</li>
+                <li>&#9670; Where's the weakness here?</li>
+                <li>&#9670; How can I find [X]?</li>
+                <li>&#9670; What's really going on here?</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </div><!-- end character tab -->
+
+  <!-- ═══════════ CREW TAB ═══════════ -->
+  <div class="tab-panel" data-tab="crew">
+
+    <div class="crew-section">
+
+      <div class="crew-section-header">
+        <h2 class="crew-title">SHADOWS</h2>
+        <p class="crew-subtitle"><em>Thieves and spies</em></p>
+        <p class="crew-xp-trigger">&#9670; <strong>XP Trigger:</strong> You earn xp when you execute a <strong>burglary</strong>, <strong>espionage</strong>, <strong>robbery</strong>, or <strong>sabotage</strong> operation.</p>
+      </div>
+
+      <!-- Crew Trackers -->
+      <div class="crew-trackers">
+        <div class="crew-trackers-col">
+          <div class="track-group">
+            <label class="track-label">REP <span class="track-value" data-display="rep">0</span>/12</label>
+            <div class="box-track" data-track="rep" data-max="12"></div>
+          </div>
+          <div class="track-group">
+            <label class="track-label">HEAT <span class="track-value" data-display="heat">0</span>/9</label>
+            <div class="box-track" data-track="heat" data-max="9"></div>
+          </div>
+          <div class="track-group crew-xp-group">
+            <label class="track-label">CREW XP</label>
+            <div class="xp-track" data-track="crewXp" data-max="8"></div>
+            <button class="clear-btn" data-clear="crewXp" title="Clear track">&#x21bb;</button>
+          </div>
+        </div>
+        <div class="crew-trackers-col">
+          <div class="track-group">
+            <label class="track-label">TIER</label>
+            <div class="box-track" data-track="crewTier" data-max="4"></div>
+          </div>
+          <div class="track-group">
+            <label class="track-label">HOLD</label>
+            <span class="options" data-field="hold">
+              <span class="option" data-value="strong">STRONG</span>
+              <span class="option" data-value="weak">WEAK</span>
+            </span>
+          </div>
+          <div class="track-group">
+            <label class="track-label">WANTED LEVEL</label>
+            <div class="box-track" data-track="wantedLevel" data-max="4"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Claims Map (full width) ── -->
+      <section class="section" data-collapsible>
+        <h2 class="section-head">SHADOWS CLAIMS <span class="collapse-toggle">&#9660;</span></h2>
+        <div class="section-body">
+          <div class="claims-grid" id="claims-grid">
+            <!-- Row 1 -->
+            <div class="claim" data-claim="claim_interrogation_chamber"><span class="claim-name">INTERROGATION CHAMBER</span></div>
+            <div class="claim" data-claim="claim_turf_1"><span class="claim-name">TURF</span></div>
+            <div class="claim" data-claim="claim_loyal_fence"><span class="claim-name">LOYAL FENCE</span></div>
+            <div class="claim" data-claim="claim_gambling_den"><span class="claim-name">GAMBLING DEN</span></div>
+            <div class="claim" data-claim="claim_tavern"><span class="claim-name">TAVERN</span></div>
+            <!-- Row 2 -->
+            <div class="claim" data-claim="claim_drug_den"><span class="claim-name">DRUG DEN</span></div>
+            <div class="claim" data-claim="claim_informants"><span class="claim-name">INFORMANTS</span></div>
+            <div class="claim claim--lair" data-claim="claim_lair"><span class="claim-name">LAIR</span></div>
+            <div class="claim" data-claim="claim_turf_2"><span class="claim-name">TURF</span></div>
+            <div class="claim" data-claim="claim_lookouts"><span class="claim-name">LOOKOUTS</span></div>
+            <!-- Row 3 -->
+            <div class="claim" data-claim="claim_hagfish_farm"><span class="claim-name">HAGFISH FARM</span></div>
+            <div class="claim" data-claim="claim_infirmary"><span class="claim-name">INFIRMARY</span></div>
+            <div class="claim" data-claim="claim_covert_drop"><span class="claim-name">COVERT DROP</span></div>
+            <div class="claim" data-claim="claim_turf_3"><span class="claim-name">TURF</span></div>
+            <div class="claim" data-claim="claim_secret_pathways"><span class="claim-name">SECRET PATHWAYS</span></div>
+          </div>
+          <div class="claims-descriptions">
+            <div class="claims-desc-grid">
+              <p><strong>Covert Drop:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve espionage or sabotage.</p>
+              <p><strong>Informants:</strong> You get <strong>+1d</strong> to gather information for a score.</p>
+              <p><strong>Drug Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
+              <p><strong>Interrogation Chamber:</strong> You get <strong>+1d</strong> to <strong>Command</strong> and <strong>Sway</strong> on-site.</p>
+              <p><strong>Gambling Den:</strong> Any time during downtime, roll dice equal to your Tier. You earn <strong>coin</strong> equal to the highest result, minus your <strong>heat</strong>.</p>
+              <p><strong>Lookouts:</strong> You get <strong>+1d</strong> to <strong>Hunt</strong> or <strong>Survey</strong> on your turf.</p>
+              <p><strong>Hagfish Farm:</strong> When you use the <strong>reduce heat</strong> downtime activity after a score that involves killing, you get <strong>+1d</strong>.</p>
+              <p><strong>Loyal Fence:</strong> You get <strong>+2 coin</strong> in <strong>payoff</strong> for scores that involve burglary or robbery.</p>
+              <p><strong>Infirmary:</strong> You get <strong>+1d</strong> to healing treatment rolls.</p>
+              <p><strong>Secret Pathways:</strong> You get <strong>+1d</strong> to the <strong>engagement roll</strong> for <strong>stealth</strong> plans.</p>
+              <p><strong>Tavern:</strong> You get <strong>+1d</strong> to <strong>Consort</strong> and <strong>Sway</strong> rolls on-site.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Lair Details ── -->
+      <section class="section" data-collapsible>
+        <h2 class="section-head">LAIR DETAILS <span class="collapse-toggle">&#9660;</span></h2>
+        <div class="section-body">
+          <div class="lair-fields">
+            <div class="field">
+              <label>NAME</label>
+              <input type="text" data-field="lairName" placeholder="e.g. The Dusty Cellar">
+            </div>
+            <div class="field">
+              <label>LOCATION</label>
+              <input type="text" data-field="lairLocation" placeholder="e.g. Crow's Foot, under the old tannery">
+            </div>
+            <textarea data-field="lairNotes" rows="4" placeholder="Lair notes — describe your lair, defenses, hidden features, secret entrances..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <div class="crew-body">
+
+        <!-- Crew Left Column -->
+        <div class="crew-left">
+
+          <!-- Hunting Grounds -->
+          <section class="section" data-collapsible>
+            <h2 class="section-head">HUNTING GROUNDS <span class="collapse-toggle">&#9660;</span></h2>
+            <div class="section-body">
+              <p class="section-note">Choose a favored operation type:</p>
+              <div class="option-group">
+                <span class="options" data-field="huntingGround">
+                  <span class="option" data-value="Burglary">BURGLARY</span>
+                  <span class="option" data-value="Espionage">ESPIONAGE</span>
+                  <span class="option" data-value="Robbery">ROBBERY</span>
+                  <span class="option" data-value="Sabotage">SABOTAGE</span>
+                </span>
+              </div>
+              <div class="hunting-descriptions">
+                <p><strong>Burglary:</strong> Theft by breaking and entering.</p>
+                <p><strong>Espionage:</strong> Obtain secret information by covert or clandestine means.</p>
+                <p><strong>Robbery:</strong> Theft by force or threats.</p>
+                <p><strong>Sabotage:</strong> Hurt an opponent by destroying something.</p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Crew Contacts -->
+          <section class="section" data-collapsible>
+            <h2 class="section-head">CREW CONTACTS <span class="collapse-toggle">&#9660;</span></h2>
+            <div class="section-body">
+              <div id="crew-contacts-list" class="friends-list">
+                <!-- populated by JS -->
+              </div>
+              <button class="add-btn" data-add="crewContact">+ Add Contact</button>
+            </div>
+          </section>
+
+          <!-- Shadows Upgrades -->
+          <section class="section" data-collapsible>
+            <h2 class="section-head">SHADOWS UPGRADES <span class="collapse-toggle">&#9660;</span></h2>
+            <div class="section-body">
+              <p class="section-note starting-upgrades">Starting: <strong>Training: Prowess</strong> &bull; <strong>Lair: Hidden</strong></p>
+              <div class="upgrade-list">
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="upgrade_thiefRigging">
+                  <span><strong>Thief Rigging:</strong> You get 2 free load worth of tool or gear items.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="upgrade_undergroundMaps">
+                  <span><strong>Underground Maps and Passkeys:</strong> Easy passage through the underground canals, tunnels, and basements of the city.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="upgrade_eliteRooks">
+                  <span><strong>Elite Rooks:</strong> All Rooks cohorts get <strong>+1d</strong> to quality rolls for Rook-related actions.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="upgrade_eliteSkulks">
+                  <span><strong>Elite Skulks:</strong> All Skulks cohorts get <strong>+1d</strong> to quality rolls for Skulk-related actions.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="upgrade_steady">
+                  <span><strong>Steady:</strong> Each PC gets <strong>+1 stress box</strong>. <em>(Costs 3 upgrades to unlock.)</em></span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Crew Right Column -->
+        <div class="crew-right">
+
+          <!-- Shadows Special Abilities -->
+          <section class="section" data-collapsible>
+            <h2 class="section-head">SHADOWS ABILITIES <span class="collapse-toggle">&#9660;</span></h2>
+            <div class="section-body">
+              <div class="crew-ability-list">
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_everyoneSteals">
+                  <span><strong>Everyone Steals:</strong> Each PC may add +1 action rating to <strong>Prowl</strong>, <strong>Finesse</strong>, or <strong>Tinker</strong> (up to max 3).</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_ghostEchoes">
+                  <span><strong>Ghost Echoes:</strong> All crew members can see and interact with the ghostly structures, streets, and objects within the echo of Doskvol in the ghost field.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_packRats">
+                  <span><strong>Pack Rats:</strong> Your lair is a jumble of stolen items. When you roll to <strong>acquire an asset</strong>, take <strong>+1d</strong>.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_patron">
+                  <span><strong>Patron:</strong> When you advance your Tier, it costs <strong>half the coin</strong> it normally would.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_secondStory">
+                  <span><strong>Second Story:</strong> When you execute a clandestine infiltration, you get <strong>+1d</strong> to the <strong>engagement roll</strong>.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_slippery">
+                  <span><strong>Slippery:</strong> When you roll <strong>entanglements</strong>, roll twice and keep the one you want. When you <strong>reduce heat</strong>, take <strong>+1d</strong>.</span>
+                </label>
+                <label class="upgrade-check">
+                  <input type="checkbox" data-field="crewAbility_synchronized">
+                  <span><strong>Synchronized:</strong> When you perform a <strong>group action</strong>, you may count multiple 6s from different rolls as a <strong>critical</strong> success.</span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+
+      <!-- Score Opportunities (full width, book style) -->
+      <section class="section" data-collapsible>
+        <h2 class="section-head">SCORE OPPORTUNITIES <span class="collapse-toggle">&#9660;</span></h2>
+        <div class="section-body">
+          <table class="opp-table">
+            <tbody>
+              <tr><td class="opp-num">1</td><td>A local art dealer announces an exhibition of rare ancient Iruvian jewelry. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">2</td><td>The Path of Echoes needs a specific body purloined from the crematorium before it's dissolved tonight. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+              <tr><td class="opp-num">3</td><td>A collector wants to steal an original work of art or industry and replace it with a forgery. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">4</td><td>A client wants to extract a loved one from their servitude in an indentured work house. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+              <tr><td class="opp-num">5</td><td>A ghost wants you to secure the rest of their precious collection of worldly things. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">6</td><td>A master assassin has come out of retirement for one more job. Many would pay well to know who their target is. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+            </tbody>
+            <tbody>
+              <tr class="opp-divider"><td colspan="2"></td></tr>
+              <tr><td class="opp-num">1</td><td>The black sheep of a noble family wants their revenge, and the deed to the ancestral estate is the key. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">2</td><td>A drug gang wants to obtain the secret formula for their rival's popular new product. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+              <tr><td class="opp-num">3</td><td>Strange artifacts were recovered from the void sea. They're held at Bellweather for analysis by the Spirit Wardens. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">4</td><td>Rumors of war, aren't there always. Plant a damning paper trail in the office of the ambassador. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+              <tr><td class="opp-num">5</td><td>Anti-imperial agents are passing information while on the trains. Intercept their communiques. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">6</td><td>A professor in Sparkwright Tower wants their rival's research notes. Make it look like a common burglary. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+            </tbody>
+            <tbody>
+              <tr class="opp-divider"><td colspan="2"></td></tr>
+              <tr><td class="opp-num">1</td><td>A Bluecoat squad doesn't want to make a very dangerous arrest. Steal the evidence from the Inspector's safe. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">2</td><td>A damning piece of evidence against a vulnerable crime lord is held in a bank vault until trial. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+              <tr><td class="opp-num">3</td><td>A client seeks the source of altered texts sold to academy students that's driving them to madness and murder. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">4</td><td>A desperate Inspector needs you to plant evidence to bring down a demon-corrupted Spirit Warden. <span class="opp-tags"><span class="opp-tag opp-tag--espionage">Espionage</span><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+              <tr><td class="opp-num">5</td><td>A circus is in town, featuring strange creatures and mysterious animals. A client would pay well for a new pet. <span class="opp-tags"><span class="opp-tag opp-tag--burglary">Burglary</span><span class="opp-tag opp-tag--robbery">Robbery</span></span></td></tr>
+              <tr class="opp-shaded"><td class="opp-num">6</td><td>Only one gang member survived their botched job. Can you clean the bloody scene before the authorities arrive? <span class="opp-tags"><span class="opp-tag opp-tag--sabotage">Sabotage</span></span></td></tr>
+            </tbody>
+          </table>
+          <p class="opp-footer"><em>For any opportunity above, consider a Burglary, Espionage, Robbery or Sabotage operation. To twist an opportunity or add additional elements, roll on the score generator tables.</em></p>
+        </div>
+      </section>
+
+    </div>
+
+  </div><!-- end crew tab -->
+
+  <!-- ═══════════ FACTIONS TAB ═══════════ -->
+  <div class="tab-panel" data-tab="factions">
+
+    <div class="factions-section">
+      <div class="factions-header">
+        <h2 class="crew-title">FACTIONS</h2>
+        <p class="crew-subtitle"><em>Track the organizations of Doskvol and your relationships with them</em></p>
+      </div>
+      <div id="factions-list">
+        <!-- populated by JS -->
+      </div>
+      <button class="add-btn" data-add="faction">+ Add Faction</button>
+    </div>
+
+  </div><!-- end factions tab -->
 
   <!-- ═══════════ TOOLBAR ═══════════ -->
   <div class="toolbar">
     <button id="btn-export" title="Export character as JSON">Export</button>
     <button id="btn-import" title="Import character from JSON">Import</button>
+    <button id="btn-print" title="Open printable version in new tab">Print</button>
     <button id="btn-reset" title="Reset character sheet">New Character</button>
     <input type="file" id="import-file" accept=".json" hidden>
   </div>

@@ -98,6 +98,10 @@ function defaultState() {
       { name: 'Adelaide Phroaig, a noble', status: 'neutral' },
       { name: 'Rigney, a tavern owner', status: 'neutral' },
     ],
+
+    // Factions
+    factions: [],
+
     hunt: 0, study: 0, survey: 0, tinker: 0,
     finesse: 0, prowl: 0, skirmish: 0, wreck: 0,
     attune: 0, command: 0, consort: 0, sway: 0,
@@ -190,6 +194,7 @@ function renderAll() {
   renderCrewContacts();
   renderClaims();
   renderPlaybookIndicators();
+  renderFactions();
 }
 
 // ── Text Fields ────────────────────────
@@ -226,7 +231,7 @@ function renderMultiOptionGroups() {
 
 // ── Box Tracks (stress, trauma, stash, coin) ──
 function renderBoxTracks() {
-  document.querySelectorAll('.box-track').forEach(track => {
+  document.querySelectorAll('.box-track[data-track]').forEach(track => {
     const field = track.dataset.track;
     const max = parseInt(track.dataset.max);
     const val = state[field] || 0;
@@ -278,7 +283,7 @@ function renderDots() {
 
 // ── Healing Clock ──────────────────────
 function renderClock() {
-  document.querySelectorAll('.clock').forEach(svg => {
+  document.querySelectorAll('.clock[data-clock]').forEach(svg => {
     const field = svg.dataset.clock;
     const val = state[field] || 0;
     svg.querySelectorAll('.clock-seg').forEach(seg => {
@@ -417,9 +422,112 @@ function renderPlaybookIndicators() {
   });
 }
 
+// ── Dynamic Clock SVG Generation ──────
+function clockSVG(segments, filled, size) {
+  size = size || 44;
+  const h = size / 2;
+  const r = h - 2;
+  let s = `<svg class="faction-clock-svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">`;
+  s += `<circle cx="${h}" cy="${h}" r="${r}" fill="none" stroke="currentColor" stroke-width="2"/>`;
+  for (let i = 0; i < segments; i++) {
+    const a1 = (i / segments) * 2 * Math.PI - Math.PI / 2;
+    const a2 = ((i + 1) / segments) * 2 * Math.PI - Math.PI / 2;
+    const x1 = h + r * Math.cos(a1);
+    const y1 = h + r * Math.sin(a1);
+    const x2 = h + r * Math.cos(a2);
+    const y2 = h + r * Math.sin(a2);
+    const large = (a2 - a1 > Math.PI) ? 1 : 0;
+    s += `<path d="M${h},${h} L${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large},1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" class="clock-seg${i < filled ? ' filled' : ''}" data-seg="${i}"/>`;
+    s += `<line x1="${h}" y1="${h}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="currentColor" stroke-width="1"/>`;
+  }
+  s += `</svg>`;
+  return s;
+}
+
+// ── Factions ──────────────────────────
+function renderFactions() {
+  const list = document.getElementById('factions-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  (state.factions || []).forEach((faction, fi) => {
+    const card = document.createElement('div');
+    card.className = 'faction-card';
+    card.dataset.factionIndex = fi;
+
+    const statuses = ['ally', 'friendly', 'helpful', 'neutral', 'interfering', 'hostile', 'war'];
+    const statusBtns = statuses.map(s =>
+      `<button class="faction-status-btn${faction.status === s ? ' active' : ''}" data-value="${s}" data-faction-status="${fi}">${s.toUpperCase()}</button>`
+    ).join('');
+
+    let clocksHtml = '';
+    (faction.clocks || []).forEach((clock, ci) => {
+      clocksHtml += `
+        <div class="faction-clock-item" data-faction-index="${fi}" data-clock-index="${ci}">
+          <input type="text" value="${escHtml(clock.name)}" data-faction-clock-name="${fi}" data-clock-idx="${ci}" placeholder="Clock name">
+          ${clockSVG(clock.segments, clock.filled, 44)}
+          <select data-faction-clock-segments="${fi}" data-clock-idx="${ci}">
+            <option value="4"${clock.segments === 4 ? ' selected' : ''}>4-seg</option>
+            <option value="6"${clock.segments === 6 ? ' selected' : ''}>6-seg</option>
+            <option value="8"${clock.segments === 8 ? ' selected' : ''}>8-seg</option>
+            <option value="12"${clock.segments === 12 ? ' selected' : ''}>12-seg</option>
+          </select>
+          <button class="faction-clock-remove" data-remove-faction-clock="${fi}" data-clock-idx="${ci}" title="Remove clock">&times;</button>
+        </div>
+      `;
+    });
+
+    card.innerHTML = `
+      <div class="faction-header">
+        <input type="text" class="faction-name-input" value="${escHtml(faction.name)}" data-faction-name="${fi}" placeholder="FACTION NAME">
+        <div class="faction-tier-group">
+          <label>TIER</label>
+          <div class="box-track" data-faction-tier="${fi}" data-max="5"></div>
+        </div>
+        <button class="faction-remove" data-remove-faction="${fi}" title="Remove faction">&times;</button>
+      </div>
+      <div class="faction-body">
+        <div class="faction-status-group">${statusBtns}</div>
+        <textarea data-faction-notes="${fi}" placeholder="Turf, NPCs, Notable Assets, Quirks, Allies, Enemies, Situation...">${escHtml(faction.notes)}</textarea>
+        <div class="faction-clocks-row">
+          <strong style="font-size:0.8rem;letter-spacing:0.04em">CLOCKS</strong>
+          <button class="add-btn" data-add-faction-clock="${fi}" style="width:auto;display:inline;padding:0.2rem 0.6rem;margin:0">+ Clock</button>
+        </div>
+        <div class="faction-clocks-list">${clocksHtml}</div>
+      </div>
+    `;
+    list.appendChild(card);
+
+    // Render the tier box track manually
+    const tierTrack = card.querySelector(`[data-faction-tier="${fi}"]`);
+    const max = parseInt(tierTrack.dataset.max);
+    for (let i = 0; i < max; i++) {
+      const box = document.createElement('span');
+      box.className = 'box' + (i < faction.tier ? ' filled' : '');
+      box.dataset.index = i;
+      tierTrack.appendChild(box);
+    }
+  });
+}
+
+// ── Tab Switching ─────────────────────
+function switchTab(tabName) {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === tabName);
+  });
+}
+
 // ── Event Binding ──────────────────────
 function bindEvents() {
   const sheet = document.querySelector('.sheet');
+
+  // Tab clicks
+  document.querySelectorAll('.tab[data-tab]').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
 
   // Text inputs
   sheet.addEventListener('input', e => {
@@ -465,6 +573,29 @@ function bindEvents() {
     // Crew contact name
     if (el.matches('[data-crew-contact-index]')) {
       state.crewContacts[parseInt(el.dataset.crewContactIndex)].name = el.value;
+      saveState();
+      return;
+    }
+
+    // Faction name
+    if (el.matches('[data-faction-name]')) {
+      state.factions[parseInt(el.dataset.factionName)].name = el.value;
+      saveState();
+      return;
+    }
+
+    // Faction notes
+    if (el.matches('[data-faction-notes]')) {
+      state.factions[parseInt(el.dataset.factionNotes)].notes = el.value;
+      saveState();
+      return;
+    }
+
+    // Faction clock name
+    if (el.matches('[data-faction-clock-name]')) {
+      const fi = parseInt(el.dataset.factionClockName);
+      const ci = parseInt(el.dataset.clockIdx);
+      state.factions[fi].clocks[ci].name = el.value;
       saveState();
       return;
     }
@@ -516,16 +647,27 @@ function bindEvents() {
       return;
     }
 
-    // Box tracks (stress, trauma, stash, coin)
-    if (el.matches('.box-track .box')) {
-      const track = el.closest('.box-track');
+    // Box tracks (stress, trauma, stash, coin — NOT faction tier)
+    if (el.matches('.box-track[data-track] .box')) {
+      const track = el.closest('.box-track[data-track]');
       const field = track.dataset.track;
       const idx = parseInt(el.dataset.index);
       const current = state[field] || 0;
-      // Click on the last filled box to decrement, otherwise set to clicked index + 1
       state[field] = (idx + 1 === current) ? current - 1 : idx + 1;
       saveState();
       renderBoxTracks();
+      return;
+    }
+
+    // Faction tier box track
+    if (el.matches('.box-track[data-faction-tier] .box')) {
+      const track = el.closest('.box-track[data-faction-tier]');
+      const fi = parseInt(track.dataset.factionTier);
+      const idx = parseInt(el.dataset.index);
+      const current = state.factions[fi].tier || 0;
+      state.factions[fi].tier = (idx + 1 === current) ? current - 1 : idx + 1;
+      saveState();
+      renderFactions();
       return;
     }
 
@@ -554,17 +696,31 @@ function bindEvents() {
       return;
     }
 
-    // Clock segments
+    // Clock segments (healing clock and faction clocks)
     if (el.matches('.clock-seg')) {
-      const svg = el.closest('.clock');
-      const field = svg.dataset.clock;
-      const segments = parseInt(svg.dataset.segments);
-      const idx = parseInt(el.dataset.seg);
-      const current = state[field] || 0;
-      state[field] = (idx + 1 === current) ? current - 1 : idx + 1;
-      saveState();
-      renderClock();
-      return;
+      // Healing clock
+      const healingSvg = el.closest('.clock[data-clock]');
+      if (healingSvg) {
+        const field = healingSvg.dataset.clock;
+        const idx = parseInt(el.dataset.seg);
+        const current = state[field] || 0;
+        state[field] = (idx + 1 === current) ? current - 1 : idx + 1;
+        saveState();
+        renderClock();
+        return;
+      }
+      // Faction clock
+      const factionClockItem = el.closest('.faction-clock-item');
+      if (factionClockItem) {
+        const fi = parseInt(factionClockItem.dataset.factionIndex);
+        const ci = parseInt(factionClockItem.dataset.clockIndex);
+        const clock = state.factions[fi].clocks[ci];
+        const idx = parseInt(el.dataset.seg);
+        clock.filled = (idx + 1 === clock.filled) ? clock.filled - 1 : idx + 1;
+        saveState();
+        renderFactions();
+        return;
+      }
     }
 
     // Clear XP track
@@ -639,12 +795,51 @@ function bindEvents() {
       return;
     }
 
+    // Faction status
+    if (el.matches('[data-faction-status]')) {
+      const fi = parseInt(el.dataset.factionStatus);
+      const val = el.dataset.value;
+      state.factions[fi].status = state.factions[fi].status === val ? 'neutral' : val;
+      saveState();
+      renderFactions();
+      return;
+    }
+
+    // Remove faction
+    if (el.matches('[data-remove-faction]')) {
+      const fi = parseInt(el.dataset.removeFaction);
+      if (confirm(`Remove faction "${state.factions[fi].name || 'Unnamed'}"?`)) {
+        state.factions.splice(fi, 1);
+        saveState();
+        renderFactions();
+      }
+      return;
+    }
+
+    // Remove faction clock
+    if (el.matches('[data-remove-faction-clock]')) {
+      const fi = parseInt(el.dataset.removeFactionClock);
+      const ci = parseInt(el.dataset.clockIdx);
+      state.factions[fi].clocks.splice(ci, 1);
+      saveState();
+      renderFactions();
+      return;
+    }
+
+    // Add faction clock
+    if (el.matches('[data-add-faction-clock]')) {
+      const fi = parseInt(el.dataset.addFactionClock);
+      state.factions[fi].clocks.push({ name: '', segments: 4, filled: 0 });
+      saveState();
+      renderFactions();
+      return;
+    }
+
     // Add buttons
     if (el.matches('[data-add="ability"]')) {
       state.specialAbilities.push('');
       saveState();
       renderAbilities();
-      // Focus the new input
       const inputs = document.querySelectorAll('#special-abilities-list input');
       if (inputs.length) inputs[inputs.length - 1].focus();
       return;
@@ -674,6 +869,14 @@ function bindEvents() {
       if (inputs.length) inputs[inputs.length - 1].focus();
       return;
     }
+    if (el.matches('[data-add="faction"]')) {
+      state.factions.push({ name: '', tier: 0, status: 'neutral', notes: '', clocks: [] });
+      saveState();
+      renderFactions();
+      const inputs = document.querySelectorAll('.faction-name-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+      return;
+    }
   });
 
   // Checkbox changes (armor, item carried)
@@ -700,6 +903,19 @@ function bindEvents() {
       updateLoadMeter();
       return;
     }
+
+    // Faction clock segment count change
+    if (el.matches('[data-faction-clock-segments]')) {
+      const fi = parseInt(el.dataset.factionClockSegments);
+      const ci = parseInt(el.dataset.clockIdx);
+      const newSegs = parseInt(el.value);
+      const clock = state.factions[fi].clocks[ci];
+      clock.segments = newSegs;
+      if (clock.filled > newSegs) clock.filled = newSegs;
+      saveState();
+      renderFactions();
+      return;
+    }
   });
 
   // ── Toolbar ──
@@ -708,6 +924,7 @@ function bindEvents() {
     document.getElementById('import-file').click();
   });
   document.getElementById('import-file').addEventListener('change', importCharacter);
+  document.getElementById('btn-print').addEventListener('click', printSheet);
   document.getElementById('btn-reset').addEventListener('click', resetCharacter);
 }
 
@@ -749,6 +966,64 @@ function resetCharacter() {
   state = defaultState();
   saveState();
   renderAll();
+}
+
+// ── Print (open printable version in new tab) ──
+function printSheet() {
+  const w = window.open('', '_blank');
+  if (!w) {
+    alert('Popup blocked. Please allow popups for this site.');
+    return;
+  }
+
+  // Clone the sheet content
+  const sheetClone = document.querySelector('.sheet').cloneNode(true);
+
+  // Show all tab panels, remove tab bar and toolbar
+  const tabBar = sheetClone.querySelector('.tab-bar');
+  if (tabBar) tabBar.remove();
+  const toolbar = sheetClone.querySelector('.toolbar');
+  if (toolbar) toolbar.remove();
+
+  sheetClone.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.add('active');
+    p.style.display = 'block';
+  });
+
+  // Remove interactive-only elements
+  sheetClone.querySelectorAll('.add-btn, .clear-btn, .friend-remove, .ability-remove, .item-remove, .faction-remove, .faction-clock-remove, .collapse-toggle').forEach(el => el.remove());
+
+  // Remove hidden file input
+  const fileInput = sheetClone.querySelector('#import-file');
+  if (fileInput) fileInput.remove();
+
+  // Remove select dropdowns for faction clock segments
+  sheetClone.querySelectorAll('.faction-clock-item select').forEach(el => el.remove());
+
+  w.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escHtml(document.title)} - Print</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { padding: 0.5rem; }
+    .sheet { border: none; padding: 0.5rem; }
+    .tab-panel { display: block !important; border-top: 2px solid #1a1a1a; padding-top: 1rem; margin-top: 1rem; }
+    .add-btn, .clear-btn, .friend-remove, .ability-remove, .item-remove,
+    .faction-remove, .faction-clock-remove, .collapse-toggle,
+    .faction-clock-item select { display: none !important; }
+    .faction-status-btn { pointer-events: none; }
+    @media print {
+      body { padding: 0; }
+      .sheet { padding: 0; }
+    }
+  </style>
+</head>
+<body>${sheetClone.outerHTML}</body>
+</html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
 }
 
 // ── Utility ────────────────────────────
