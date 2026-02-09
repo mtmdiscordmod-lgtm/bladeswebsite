@@ -1082,6 +1082,10 @@ function initDiceSettings() {
   var vBounce   = document.getElementById('dice-val-bounce');
   var vWeight   = document.getElementById('dice-val-weight');
 
+  // Lighting control
+  var sLighting = document.getElementById('dice-slider-lighting');
+  var vLighting = document.getElementById('dice-val-lighting');
+
   // Skin controls
   var skinColor    = document.getElementById('dice-skin-color');
   var skinPip      = document.getElementById('dice-skin-pip');
@@ -1098,9 +1102,11 @@ function initDiceSettings() {
     if (saved.diceColor) skinColor.value = saved.diceColor;
     if (saved.pipColor) skinPip.value = saved.pipColor;
     if (saved.material) skinMaterial.value = saved.material;
+    if (saved.lighting !== undefined) sLighting.value = saved.lighting;
   }
 
   applySliders();
+  applyLighting();
   applySkinControls();
 
   function applySliders() {
@@ -1111,6 +1117,12 @@ function initDiceSettings() {
     vBounce.textContent   = b;
     vWeight.textContent   = w;
     DiceEngine.applySettings(sliderToCannonPhysics(f, b, w));
+  }
+
+  function applyLighting() {
+    var l = parseInt(sLighting.value);
+    vLighting.textContent = l;
+    DiceEngine.setLighting(l / 100);
   }
 
   function applySkinControls() {
@@ -1127,6 +1139,7 @@ function initDiceSettings() {
       bounce:   parseInt(sBounce.value),
       weight:   parseInt(sWeight.value),
       preset:   presetName || '',
+      lighting: parseInt(sLighting.value),
       diceColor: skinColor.value,
       pipColor:  skinPip.value,
       material:  skinMaterial.value,
@@ -1148,6 +1161,7 @@ function initDiceSettings() {
   sFriction.addEventListener('input', function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sBounce.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sWeight.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
+  sLighting.addEventListener('input', function() { applyLighting(); saveSettings(); });
 
   // Skin change handlers
   skinColor.addEventListener('input', function() { applySkinControls(); saveSettings(); });

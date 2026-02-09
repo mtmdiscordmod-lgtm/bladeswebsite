@@ -51,6 +51,8 @@ const DiceEngine = (function () {
   let selectedDice = [];
   let animFrame = null;
   let container;
+  let ambientLight, dirLight;
+  let lightingIntensity = 1.0; // multiplier (0.3 – 2.0)
 
   // Physics settings (mapped from sliders)
   let settings = {
@@ -113,10 +115,10 @@ const DiceEngine = (function () {
     renderer.domElement.style.zIndex = '9999';
 
     // ── Lighting ──
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
     dirLight.position.set(5, 15, 5);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 1024;
@@ -439,7 +441,10 @@ const DiceEngine = (function () {
 
     document.addEventListener('pointerdown', function (e) {
       if (e.ctrlKey || e.metaKey) return; // let selection box handle
-      if (e.target.closest('.dice-toolbar, .dice-settings, .sheet, .toolbar, .tab-bar')) return;
+      // Skip dice-specific UI panels
+      if (e.target.closest('.dice-toolbar, .dice-settings')) return;
+      // Skip interactive form elements (character sheet inputs, buttons, etc.)
+      if (e.target.closest('input, textarea, select, button, a, label, .tab-bar')) return;
 
       updateMouse(e);
       const hit = raycastDice();
@@ -471,7 +476,7 @@ const DiceEngine = (function () {
           dragDie.resultEl.style.opacity = '0';
         }
 
-        // Enable pointer capture
+        // Enable pointer capture on canvas for drag
         renderer.domElement.style.pointerEvents = 'auto';
         renderer.domElement.setPointerCapture(e.pointerId);
       }
@@ -833,6 +838,17 @@ const DiceEngine = (function () {
     return Object.assign({}, settings);
   }
 
+  // ── Lighting control ──
+  function setLighting(intensity) {
+    lightingIntensity = intensity;
+    if (ambientLight) ambientLight.intensity = 0.8 * intensity;
+    if (dirLight) dirLight.intensity = 1.0 * intensity;
+  }
+
+  function getLighting() {
+    return lightingIntensity;
+  }
+
   return {
     init: init,
     addDie: addDie,
@@ -841,6 +857,8 @@ const DiceEngine = (function () {
     getSettings: getSettings,
     applySkin: applySkin,
     getSkin: getSkin,
+    setLighting: setLighting,
+    getLighting: getLighting,
   };
 })();
 
