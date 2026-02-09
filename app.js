@@ -1085,6 +1085,8 @@ function initDiceSettings() {
   // Lighting control
   var sLighting = document.getElementById('dice-slider-lighting');
   var vLighting = document.getElementById('dice-val-lighting');
+  var sZoom     = document.getElementById('dice-slider-zoom');
+  var vZoom     = document.getElementById('dice-val-zoom');
 
   // Skin controls
   var skinColor    = document.getElementById('dice-skin-color');
@@ -1107,11 +1109,13 @@ function initDiceSettings() {
     if (saved.pipColor) skinPip.value = saved.pipColor;
     if (saved.material) skinMaterial.value = saved.material;
     if (saved.lighting !== undefined) sLighting.value = saved.lighting;
+    if (saved.zoom !== undefined) sZoom.value = saved.zoom;
     if (saved.trayBg) trayBg.value = saved.trayBg;
   }
 
   applySliders();
   applyLighting();
+  applyZoom();
   applySkinControls();
   applyTrayBg();
 
@@ -1139,6 +1143,12 @@ function initDiceSettings() {
     });
   }
 
+  function applyZoom() {
+    var z = parseInt(sZoom.value);
+    vZoom.textContent = z;
+    DiceEngine.setZoom(z / 100);
+  }
+
   function applyTrayBg() {
     if (!diceAreaEl) return;
     diceAreaEl.className = '';
@@ -1153,6 +1163,7 @@ function initDiceSettings() {
       weight:   parseInt(sWeight.value),
       preset:   presetName || '',
       lighting: parseInt(sLighting.value),
+      zoom:     parseInt(sZoom.value),
       trayBg:    trayBg.value,
       diceColor: skinColor.value,
       pipColor:  skinPip.value,
@@ -1176,6 +1187,7 @@ function initDiceSettings() {
   sBounce.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sWeight.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sLighting.addEventListener('input', function() { applyLighting(); saveSettings(); });
+  sZoom.addEventListener('input', function() { applyZoom(); saveSettings(); });
 
   // Tray background handler
   trayBg.addEventListener('change', function() { applyTrayBg(); saveSettings(); });

@@ -947,6 +947,30 @@ const DiceEngine = (function () {
       for (let i = 0; i < dice.length; i++) {
         const die = dice[i];
 
+        // Hard position clamp — prevent tunneling through walls
+        const p = die.body.position;
+        const v = die.body.velocity;
+        if (p.x < boundsMinX + HALF) {
+          p.x = boundsMinX + HALF;
+          if (v.x < 0) v.x = -v.x * 0.5;
+        }
+        if (p.x > boundsMaxX - HALF) {
+          p.x = boundsMaxX - HALF;
+          if (v.x > 0) v.x = -v.x * 0.5;
+        }
+        if (p.y > boundsMaxY - HALF) {
+          p.y = boundsMaxY - HALF;
+          if (v.y > 0) v.y = -v.y * 0.5;
+        }
+
+        // Velocity clamp to prevent extreme tunneling
+        const maxSpeed = 35;
+        const spd = Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+        if (spd > maxSpeed) {
+          const sc = maxSpeed / spd;
+          v.x *= sc; v.y *= sc; v.z *= sc;
+        }
+
         // Sync mesh to physics body
         die.mesh.position.copy(die.body.position);
         die.mesh.quaternion.copy(die.body.quaternion);
@@ -1062,11 +1086,26 @@ const DiceEngine = (function () {
 
   function getLighting() { return lightingIntensity; }
 
+  function setZoom(level) {
+    // level: 0.5 = zoomed in, 1.0 = default, 2.0 = zoomed out
+    if (!camera) return;
+    camera.position.z = 22 * level;
+    camera.updateProjectionMatrix();
+    buildWalls();
+    buildBumpers();
+    buildPropeller();
+  }
+
+  function getZoom() {
+    return camera ? camera.position.z / 22 : 1;
+  }
+
   return {
     init, addDie, removeLastDie, setDice,
     applySettings, getSettings,
     applySkin, getSkin,
     setLighting, getLighting,
+    setZoom, getZoom,
   };
 })();
 
