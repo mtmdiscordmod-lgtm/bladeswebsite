@@ -54,6 +54,9 @@ const DiceEngine = (function () {
   let groundMesh; // Three.js shadow receiver
   let bumpers = []; // { body, mesh } for pinball bumpers
   let bumperMaterial;
+  let propellerBody = null, propellerGroup = null;
+  let propellerAngle = 0;
+  const propellerSpeed = 1.5; // rad/s
 
   // World bounds (computed from container)
   let boundsMinX = -5, boundsMaxX = 5;
@@ -174,8 +177,8 @@ const DiceEngine = (function () {
 
     bumperMaterial = new CANNON.Material('bumper');
     const diceBumperMat = new CANNON.ContactMaterial(diceMaterial, bumperMaterial, {
-      friction: 0.05,
-      restitution: 0.9,
+      friction: 0.02,
+      restitution: 1.2,
     });
     world.addContactMaterial(diceBumperMat);
 
@@ -190,6 +193,7 @@ const DiceEngine = (function () {
 
     buildWalls();
     buildBumpers();
+    buildPropeller();
     setupMouseInteraction();
     setupSelectionBox();
 
@@ -291,34 +295,38 @@ const DiceEngine = (function () {
     const width = boundsMaxX - boundsMinX;
     const height = boundsMaxY - floorY;
     const centerX = (boundsMinX + boundsMaxX) / 2;
-    const bumperR = 0.45;
+    const bumperR = 0.55;
     const channelHalf = CHANNEL_DEPTH / 2;
 
-    // Staggered layout — 3 rows like a pachinko board
+    // Staggered layout — 3 rows (no center row 2, propeller goes there)
     const positions = [
       // Row 1 (upper, 68%): 2 bumpers
       { x: centerX - width * 0.22, y: floorY + height * 0.68 },
       { x: centerX + width * 0.22, y: floorY + height * 0.68 },
-      // Row 2 (middle, 46%): 3 bumpers
+      // Row 2 (middle, 46%): 2 bumpers (center removed for propeller)
       { x: centerX - width * 0.32, y: floorY + height * 0.46 },
-      { x: centerX,                y: floorY + height * 0.46 },
       { x: centerX + width * 0.32, y: floorY + height * 0.46 },
       // Row 3 (lower, 24%): 2 bumpers
       { x: centerX - width * 0.18, y: floorY + height * 0.24 },
       { x: centerX + width * 0.18, y: floorY + height * 0.24 },
     ];
 
+    // Cylinder rotation: Y axis → Z axis
+    const rotQuat = new CANNON.Quaternion();
+    rotQuat.setFromEuler(Math.PI / 2, 0, 0);
+
     positions.forEach(pos => {
-      // Physics: sphere
+      // Physics: cylinder spanning full channel depth
+      const cylinderShape = new CANNON.Cylinder(bumperR, bumperR, CHANNEL_DEPTH + 1, 12);
       const body = new CANNON.Body({
         type: CANNON.Body.STATIC,
-        shape: new CANNON.Sphere(bumperR),
         material: bumperMaterial,
       });
+      body.addShape(cylinderShape, new CANNON.Vec3(0, 0, 0), rotQuat);
       body.position.set(pos.x, pos.y, 0);
       world.addBody(body);
 
-      // Visual: cylinder along Z so it looks like a round peg from the side
+      // Visual: cylinder along Z
       const geom = new THREE.CylinderGeometry(bumperR, bumperR, channelHalf * 1.6, 20);
       geom.rotateX(Math.PI / 2);
       const mat = new THREE.MeshStandardMaterial({
@@ -336,6 +344,62 @@ const DiceEngine = (function () {
 
       bumpers.push({ body, mesh });
     });
+  }
+
+  // ── Spinning propeller obstacle ──
+  function buildPropeller() {
+    // Clean up old
+    if (propellerBody) { world.removeBody(propellerBody); propellerBody = null; }
+    if (propellerGroup) {
+      propellerGroup.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
+      scene.remove(propellerGroup);
+      propellerGroup = null;
+    }
+
+    const width = boundsMaxX - boundsMinX;
+    const height = boundsMaxY - floorY;
+    const cx = (boundsMinX + boundsMaxX) / 2;
+    const cy = floorY + height * 0.55;
+    const armHalfLen = Math.min(width * 0.12, 1.6);
+    const armHalfThick = 0.12;
+    const channelHalf = CHANNEL_DEPTH / 2;
+
+    // Physics: kinematic spinning cross
+    propellerBody = new CANNON.Body({
+      type: CANNON.Body.KINEMATIC,
+      material: bumperMaterial,
+    });
+    propellerBody.addShape(new CANNON.Box(new CANNON.Vec3(armHalfLen, armHalfThick, channelHalf)));
+    propellerBody.addShape(new CANNON.Box(new CANNON.Vec3(armHalfThick, armHalfLen, channelHalf)));
+    propellerBody.position.set(cx, cy, 0);
+    world.addBody(propellerBody);
+
+    // Visual
+    const armMat = new THREE.MeshStandardMaterial({
+      color: 0xcc8844,
+      emissive: 0x885522,
+      emissiveIntensity: 0.3,
+      metalness: 0.6,
+      roughness: 0.3,
+    });
+    propellerGroup = new THREE.Group();
+
+    const arm1 = new THREE.Mesh(
+      new THREE.BoxGeometry(armHalfLen * 2, armHalfThick * 2, channelHalf * 1.6), armMat);
+    arm1.castShadow = true;
+    const arm2 = new THREE.Mesh(
+      new THREE.BoxGeometry(armHalfThick * 2, armHalfLen * 2, channelHalf * 1.6), armMat);
+    arm2.castShadow = true;
+
+    // Center hub
+    const hubMat = new THREE.MeshStandardMaterial({
+      color: 0xddaa55, metalness: 0.8, roughness: 0.2 });
+    const hub = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), hubMat);
+    hub.castShadow = true;
+
+    propellerGroup.add(arm1, arm2, hub);
+    propellerGroup.position.set(cx, cy, 0);
+    scene.add(propellerGroup);
   }
 
   // ── Screen-to-world: intersects Z=0 plane (the view plane) ──
@@ -561,6 +625,7 @@ const DiceEngine = (function () {
         dragVelocity.set(0, 0, 0);
 
         if (dragDie.resultEl) dragDie.resultEl.style.opacity = '0';
+        hideHighestRoll();
 
         canvas.style.cursor = 'grabbing';
         canvas.setPointerCapture(e.pointerId);
@@ -811,6 +876,54 @@ const DiceEngine = (function () {
         die.resultEl.style.opacity = '1';
       }
     }
+
+    updateHighestRoll();
+  }
+
+  // ── Highest roll display ──
+  function hideHighestRoll() {
+    const el = document.getElementById('dice-highest');
+    if (el) el.style.display = 'none';
+  }
+
+  function updateHighestRoll() {
+    const wrapperEl = document.getElementById('dice-highest');
+    const valueEl = document.getElementById('dice-highest-value');
+    const critEl = document.getElementById('dice-crit-text');
+    if (!wrapperEl || !valueEl || !critEl) return;
+
+    if (dice.length === 0 || !dice.every(d => d.settled)) {
+      wrapperEl.style.display = 'none';
+      return;
+    }
+
+    const results = dice.map(d => d.lastResult);
+    const highest = Math.max(...results);
+    const sixCount = results.filter(r => r === 6).length;
+
+    wrapperEl.style.display = 'block';
+
+    // Scale font size based on value
+    const sizes = [0, 1.8, 2.2, 2.6, 3.2, 3.8, 4.5];
+    valueEl.textContent = highest;
+    valueEl.style.fontSize = sizes[highest] + 'rem';
+
+    // Glow intensity scales with value
+    const g = highest / 6;
+    valueEl.style.textShadow =
+      '0 0 ' + (10 + highest * 5) + 'px rgba(255,' + Math.round(200 * g) + ',50,0.8), ' +
+      '0 0 ' + (20 + highest * 8) + 'px rgba(255,' + Math.round(150 * g) + ',0,0.5)';
+
+    // CRIT!
+    if (sixCount >= 2) {
+      critEl.classList.add('visible');
+    } else {
+      critEl.classList.remove('visible');
+    }
+
+    if (typeof gsap !== 'undefined') {
+      gsap.fromTo(wrapperEl, { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' });
+    }
   }
 
   // ── Main loop ──
@@ -818,7 +931,18 @@ const DiceEngine = (function () {
     const fixedTimeStep = 1 / 60;
 
     function loop() {
+      // Rotate propeller before physics step
+      if (propellerBody) {
+        propellerAngle += propellerSpeed * fixedTimeStep;
+        propellerBody.quaternion.setFromEuler(0, 0, propellerAngle);
+      }
+
       world.step(fixedTimeStep);
+
+      // Sync propeller visual
+      if (propellerGroup) {
+        propellerGroup.rotation.z = propellerAngle;
+      }
 
       for (let i = 0; i < dice.length; i++) {
         const die = dice[i];
@@ -877,6 +1001,7 @@ const DiceEngine = (function () {
     renderer.setSize(rect.width, rect.height);
     buildWalls();
     buildBumpers();
+    buildPropeller();
   }
 
   // ── Remove all dice and spawn N new ones ──
@@ -893,6 +1018,7 @@ const DiceEngine = (function () {
 
   function setDice(count) {
     removeAllDice();
+    hideHighestRoll();
     const n = Math.min(count, MAX_DICE);
     for (let i = 0; i < n; i++) {
       setTimeout(() => addDie(), i * 100);

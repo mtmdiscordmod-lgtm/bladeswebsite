@@ -142,6 +142,68 @@ body {
     linear-gradient(180deg, #30303a 0%, #22222c 100%);
 }
 
+/* ── Highest Roll Display ── */
+.dice-highest-roll {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10001;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dice-highest-roll .roll-label {
+  font-family: var(--font-title);
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.dice-highest-roll .roll-value {
+  font-family: var(--font-title);
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  transition: font-size 0.3s ease;
+}
+
+.dice-highest-roll .crit-text {
+  font-family: var(--font-title);
+  font-weight: 900;
+  font-size: 1.6rem;
+  letter-spacing: 0.15em;
+  color: #ffcc00;
+  text-shadow:
+    0 0 15px rgba(255, 200, 0, 0.9),
+    0 0 30px rgba(255, 100, 0, 0.6);
+  animation: crit-shimmer 1.5s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s;
+  margin-top: 0.2rem;
+}
+
+.dice-highest-roll .crit-text.visible {
+  opacity: 1;
+}
+
+@keyframes crit-shimmer {
+  0%, 100% {
+    text-shadow:
+      0 0 15px rgba(255, 200, 0, 0.9),
+      0 0 30px rgba(255, 100, 0, 0.6);
+  }
+  50% {
+    text-shadow:
+      0 0 25px rgba(255, 220, 50, 1),
+      0 0 50px rgba(255, 150, 0, 0.8),
+      0 0 80px rgba(255, 100, 0, 0.4);
+  }
+}
+
 .dice-tray-label {
   position: absolute;
   top: 0.8rem;
