@@ -52,6 +52,8 @@ const DiceEngine = (function () {
   let ambientLight, dirLight;
   let lightingIntensity = 1.0;
   let groundMesh; // Three.js shadow receiver
+  let bumpers = []; // { body, mesh } for pinball bumpers
+  let bumperMaterial;
 
   // World bounds (computed from container)
   let boundsMinX = -5, boundsMaxX = 5;
@@ -170,6 +172,13 @@ const DiceEngine = (function () {
     });
     world.addContactMaterial(diceDiceMat);
 
+    bumperMaterial = new CANNON.Material('bumper');
+    const diceBumperMat = new CANNON.ContactMaterial(diceMaterial, bumperMaterial, {
+      friction: 0.05,
+      restitution: 0.9,
+    });
+    world.addContactMaterial(diceBumperMat);
+
     // Floor body (will be repositioned by buildWalls)
     groundBody = new CANNON.Body({
       type: CANNON.Body.STATIC,
@@ -180,11 +189,19 @@ const DiceEngine = (function () {
     world.addBody(groundBody);
 
     buildWalls();
+    buildBumpers();
     setupMouseInteraction();
     setupSelectionBox();
 
-    document.getElementById('btn-add-die').addEventListener('click', addDie);
-    document.getElementById('btn-remove-die').addEventListener('click', removeLastDie);
+    document.querySelectorAll('.dice-count-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const count = parseInt(btn.dataset.dice);
+        if (count > 0) setDice(count);
+        // Highlight active button
+        document.querySelectorAll('.dice-count-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
     window.addEventListener('resize', onResize);
 
     startLoop();
@@ -226,17 +243,20 @@ const DiceEngine = (function () {
 
     const halfHeight = (boundsMaxY - boundsMinY) / 2 + 4;
     const centerY = (boundsMaxY + boundsMinY) / 2;
-    const halfWidth = (boundsMaxX - boundsMinX) / 2 + 2;
-    const wallThick = 1;
+    const halfWidth = (boundsMaxX - boundsMinX) / 2 + 4;
+    const wallThick = 3;
     const channelHalf = CHANNEL_DEPTH / 2;
 
     const wallDefs = [
       // Left wall
       { pos: [boundsMinX - wallThick / 2, centerY, 0],
-        size: [wallThick / 2, halfHeight, channelHalf + 1] },
+        size: [wallThick / 2, halfHeight, channelHalf + 2] },
       // Right wall
       { pos: [boundsMaxX + wallThick / 2, centerY, 0],
-        size: [wallThick / 2, halfHeight, channelHalf + 1] },
+        size: [wallThick / 2, halfHeight, channelHalf + 2] },
+      // Top wall (ceiling — dice bounce off once inside)
+      { pos: [0, boundsMaxY + wallThick / 2, 0],
+        size: [halfWidth, wallThick / 2, channelHalf + 2] },
       // Back wall (behind dice, Z negative)
       { pos: [0, centerY, -channelHalf - wallThick / 2],
         size: [halfWidth, halfHeight, wallThick / 2] },
@@ -254,6 +274,67 @@ const DiceEngine = (function () {
       body.position.set(def.pos[0], def.pos[1], def.pos[2]);
       body.userData = { isWall: true };
       world.addBody(body);
+    });
+  }
+
+  // ── Pinball bumpers — static pegs that dice bounce off ──
+  function buildBumpers() {
+    // Clean up old bumpers
+    bumpers.forEach(b => {
+      world.removeBody(b.body);
+      scene.remove(b.mesh);
+      b.mesh.geometry.dispose();
+      b.mesh.material.dispose();
+    });
+    bumpers = [];
+
+    const width = boundsMaxX - boundsMinX;
+    const height = boundsMaxY - floorY;
+    const centerX = (boundsMinX + boundsMaxX) / 2;
+    const bumperR = 0.45;
+    const channelHalf = CHANNEL_DEPTH / 2;
+
+    // Staggered layout — 3 rows like a pachinko board
+    const positions = [
+      // Row 1 (upper, 68%): 2 bumpers
+      { x: centerX - width * 0.22, y: floorY + height * 0.68 },
+      { x: centerX + width * 0.22, y: floorY + height * 0.68 },
+      // Row 2 (middle, 46%): 3 bumpers
+      { x: centerX - width * 0.32, y: floorY + height * 0.46 },
+      { x: centerX,                y: floorY + height * 0.46 },
+      { x: centerX + width * 0.32, y: floorY + height * 0.46 },
+      // Row 3 (lower, 24%): 2 bumpers
+      { x: centerX - width * 0.18, y: floorY + height * 0.24 },
+      { x: centerX + width * 0.18, y: floorY + height * 0.24 },
+    ];
+
+    positions.forEach(pos => {
+      // Physics: sphere
+      const body = new CANNON.Body({
+        type: CANNON.Body.STATIC,
+        shape: new CANNON.Sphere(bumperR),
+        material: bumperMaterial,
+      });
+      body.position.set(pos.x, pos.y, 0);
+      world.addBody(body);
+
+      // Visual: cylinder along Z so it looks like a round peg from the side
+      const geom = new THREE.CylinderGeometry(bumperR, bumperR, channelHalf * 1.6, 20);
+      geom.rotateX(Math.PI / 2);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x997755,
+        emissive: 0x664422,
+        emissiveIntensity: 0.35,
+        roughness: 0.35,
+        metalness: 0.5,
+      });
+      const mesh = new THREE.Mesh(geom, mat);
+      mesh.position.set(pos.x, pos.y, 0);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      scene.add(mesh);
+
+      bumpers.push({ body, mesh });
     });
   }
 
@@ -348,10 +429,11 @@ const DiceEngine = (function () {
   function addDie() {
     if (dice.length >= MAX_DICE) return;
 
-    // Random X position within tray
-    const spawnX = boundsMinX * 0.6 + Math.random() * (boundsMaxX - boundsMinX) * 0.6;
-    // Spawn above visible area
-    const spawnY = boundsMaxY + 2;
+    // Random X position within tray (inner 70%)
+    const padX = (boundsMaxX - boundsMinX) * 0.15;
+    const spawnX = (boundsMinX + padX) + Math.random() * (boundsMaxX - boundsMinX - 2 * padX);
+    // Spawn above the top wall so dice drop through the ceiling gap
+    const spawnY = boundsMaxY + 4;
     // Random Z within channel
     const spawnZ = (Math.random() - 0.5) * (CHANNEL_DEPTH * 0.6);
 
@@ -570,7 +652,7 @@ const DiceEngine = (function () {
       if (die === originDie) return;
       const angleOffset = (idx / (count - 1) - 0.5) * spreadAngle;
       const throwAngle = baseAngle + angleOffset;
-      const throwSpeed = speed * (0.5 + Math.random() * 0.3);
+      const throwSpeed = speed * (0.85 + Math.random() * 0.15);
 
       die.body.wakeUp();
       die.body.velocity.set(
@@ -762,10 +844,11 @@ const DiceEngine = (function () {
           die.resultEl.style.top = (sp.y - 28) + 'px';
         }
 
-        // Safety: reset dice that fell way out of bounds
-        if (die.body.position.y < floorY - 5) {
-          die.body.position.set(0, boundsMaxY, 0);
-          die.body.velocity.set(0, -2, 0);
+        // Safety: reset dice that fell out of bounds (any direction)
+        const pos = die.body.position;
+        if (pos.y < floorY - 5 || pos.x < boundsMinX - 5 || pos.x > boundsMaxX + 5 || pos.y > boundsMaxY + 10) {
+          pos.set(0, boundsMaxY + 3, 0);
+          die.body.velocity.set((Math.random() - 0.5) * 4, -3, 0);
           die.body.angularVelocity.set(
             (Math.random() - 0.5) * 15,
             (Math.random() - 0.5) * 10,
@@ -793,6 +876,27 @@ const DiceEngine = (function () {
     camera.updateProjectionMatrix();
     renderer.setSize(rect.width, rect.height);
     buildWalls();
+    buildBumpers();
+  }
+
+  // ── Remove all dice and spawn N new ones ──
+  function removeAllDice() {
+    dice.forEach(die => {
+      scene.remove(die.mesh);
+      world.removeBody(die.body);
+      die.resultEl.remove();
+      disposeDie(die);
+    });
+    dice = [];
+    selectedDice = [];
+  }
+
+  function setDice(count) {
+    removeAllDice();
+    const n = Math.min(count, MAX_DICE);
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => addDie(), i * 100);
+    }
   }
 
   // ── Settings API ──
@@ -833,7 +937,7 @@ const DiceEngine = (function () {
   function getLighting() { return lightingIntensity; }
 
   return {
-    init, addDie, removeLastDie,
+    init, addDie, removeLastDie, setDice,
     applySettings, getSettings,
     applySkin, getSkin,
     setLighting, getLighting,
