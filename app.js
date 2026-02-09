@@ -1046,19 +1046,19 @@ function escHtml(str) {
    DiceEngine is loaded from dice-engine.js as ES module
    ════════════════════════════════════════ */
 var DICE_PRESETS = {
-  realistic: { friction: 60, bounce: 25, weight: 55 },
-  light:     { friction: 20, bounce: 55, weight: 20 },
-  heavy:     { friction: 90, bounce: 10, weight: 85 },
+  realistic: { friction: 35, bounce: 60, weight: 45 },
+  light:     { friction: 15, bounce: 80, weight: 20 },
+  heavy:     { friction: 70, bounce: 35, weight: 85 },
 };
 
 // ── Slider-to-physics mapping for Cannon-ES engine ──
 function sliderToCannonPhysics(friction, bounce, weight) {
   return {
-    friction: 0.1 + (friction / 100) * 0.6,
-    restitution: 0.05 + (bounce / 100) * 0.65,
+    friction: 0.05 + (friction / 100) * 0.5,
+    restitution: 0.2 + (bounce / 100) * 0.7,
     density: 0.3 + (weight / 100) * 2.0,
-    linearDamping: 0.1 + (friction / 100) * 0.4,
-    angularDamping: 0.1 + (friction / 100) * 0.4,
+    linearDamping: 0.05 + (friction / 100) * 0.25,
+    angularDamping: 0.02 + (friction / 100) * 0.2,
   };
 }
 
