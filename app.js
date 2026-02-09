@@ -1091,6 +1091,10 @@ function initDiceSettings() {
   var skinPip      = document.getElementById('dice-skin-pip');
   var skinMaterial = document.getElementById('dice-skin-material');
 
+  // Tray background
+  var trayBg = document.getElementById('dice-tray-bg');
+  var diceAreaEl = document.getElementById('dice-area');
+
   // Load saved settings
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('bladesDS')); } catch(e) {}
@@ -1103,11 +1107,13 @@ function initDiceSettings() {
     if (saved.pipColor) skinPip.value = saved.pipColor;
     if (saved.material) skinMaterial.value = saved.material;
     if (saved.lighting !== undefined) sLighting.value = saved.lighting;
+    if (saved.trayBg) trayBg.value = saved.trayBg;
   }
 
   applySliders();
   applyLighting();
   applySkinControls();
+  applyTrayBg();
 
   function applySliders() {
     var f = parseInt(sFriction.value);
@@ -1133,6 +1139,13 @@ function initDiceSettings() {
     });
   }
 
+  function applyTrayBg() {
+    if (!diceAreaEl) return;
+    diceAreaEl.className = '';
+    diceAreaEl.id = 'dice-area';
+    diceAreaEl.classList.add('bg-' + trayBg.value);
+  }
+
   function saveSettings(presetName) {
     localStorage.setItem('bladesDS', JSON.stringify({
       friction: parseInt(sFriction.value),
@@ -1140,6 +1153,7 @@ function initDiceSettings() {
       weight:   parseInt(sWeight.value),
       preset:   presetName || '',
       lighting: parseInt(sLighting.value),
+      trayBg:    trayBg.value,
       diceColor: skinColor.value,
       pipColor:  skinPip.value,
       material:  skinMaterial.value,
@@ -1162,6 +1176,9 @@ function initDiceSettings() {
   sBounce.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sWeight.addEventListener('input',   function() { applySliders(); clearPresetHighlight(); saveSettings(); });
   sLighting.addEventListener('input', function() { applyLighting(); saveSettings(); });
+
+  // Tray background handler
+  trayBg.addEventListener('change', function() { applyTrayBg(); saveSettings(); });
 
   // Skin change handlers
   skinColor.addEventListener('input', function() { applySkinControls(); saveSettings(); });

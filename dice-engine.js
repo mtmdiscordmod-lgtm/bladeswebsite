@@ -432,8 +432,8 @@ const DiceEngine = (function () {
     // Random X position within tray (inner 70%)
     const padX = (boundsMaxX - boundsMinX) * 0.15;
     const spawnX = (boundsMinX + padX) + Math.random() * (boundsMaxX - boundsMinX - 2 * padX);
-    // Spawn above the top wall so dice drop through the ceiling gap
-    const spawnY = boundsMaxY + 4;
+    // Spawn just below the ceiling so dice appear inside the tray and fall
+    const spawnY = boundsMaxY - 1;
     // Random Z within channel
     const spawnZ = (Math.random() - 0.5) * (CHANNEL_DEPTH * 0.6);
 
