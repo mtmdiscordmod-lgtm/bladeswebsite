@@ -16,6 +16,8 @@
 </head>
 <body>
 
+<div class="page-layout">
+
 <div class="sheet">
 
   <!-- ═══════════ HEADER ═══════════ -->
@@ -694,15 +696,21 @@
     <input type="file" id="import-file" accept=".json" hidden>
   </div>
 
+</div><!-- end .sheet -->
+
+<!-- ═══════════ DICE TRAY ═══════════ -->
+<div id="dice-area">
+  <div class="dice-tray-label">DICE TRAY</div>
+  <div id="dice-container"></div>
+  <div class="dice-toolbar">
+    <button id="btn-add-die" title="Add a d6">+ d6</button>
+    <button id="btn-remove-die" title="Remove a d6">&minus; d6</button>
+    <button id="btn-dice-settings" title="Dice Physics Settings">&#9881;</button>
+  </div>
+  <div id="selection-box" class="selection-box"></div>
 </div>
 
-<!-- ═══════════ DICE OVERLAY ═══════════ -->
-<div id="dice-container"></div>
-<div class="dice-toolbar">
-  <button id="btn-add-die" title="Add a d6">+ d6</button>
-  <button id="btn-remove-die" title="Remove a d6">&minus; d6</button>
-  <button id="btn-dice-settings" title="Dice Physics Settings">&#9881;</button>
-</div>
+</div><!-- end .page-layout -->
 
 <!-- ═══════════ DICE SETTINGS PANEL ═══════════ -->
 <div id="dice-settings" class="dice-settings">
@@ -753,9 +761,6 @@
     </div>
   </div>
 </div>
-
-<!-- Selection box overlay -->
-<div id="selection-box" class="selection-box"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
 <script src="app.js"></script>

@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════
    DICE ENGINE — Three.js + Cannon-ES
-   Real 3D physics dice with customizable skins
+   Real 3D physics dice in a dedicated dice tray
    ════════════════════════════════════════ */
 
 import * as THREE from 'three';
@@ -50,9 +50,9 @@ const DiceEngine = (function () {
   let dice = [];
   let selectedDice = [];
   let animFrame = null;
-  let container;
+  let container, diceArea;
   let ambientLight, dirLight;
-  let lightingIntensity = 1.0; // multiplier (0.3 – 2.0)
+  let lightingIntensity = 1.0;
 
   // Physics settings (mapped from sliders)
   let settings = {
@@ -74,7 +74,6 @@ const DiceEngine = (function () {
   let isDragging = false;
   let dragDie = null;
   let dragOffset = new THREE.Vector3();
-  let dragConstraint = null;
   let lastDragPos = new THREE.Vector3();
   let dragVelocity = new THREE.Vector3();
 
@@ -87,39 +86,41 @@ const DiceEngine = (function () {
   let groundMaterial, diceMaterial, contactMaterial;
 
   function init() {
+    diceArea = document.getElementById('dice-area');
     container = document.getElementById('dice-container');
-    if (!container) return;
+    if (!container || !diceArea) return;
+
+    const rect = diceArea.getBoundingClientRect();
 
     // ── Three.js Setup ──
     scene = new THREE.Scene();
 
-    // Camera: angled top-down for depth perception
-    const aspect = window.innerWidth / window.innerHeight;
+    // Camera: angled top-down view into the dice tray
+    const aspect = rect.width / rect.height;
     camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
-    camera.position.set(0, 12, 5);
+    camera.position.set(0, 14, 4);
     camera.lookAt(0, 0, 0);
 
     renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(rect.width, rect.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0x000000, 0);
     container.appendChild(renderer.domElement);
 
-    // Style the canvas to overlay the page
-    renderer.domElement.style.position = 'fixed';
+    // Canvas fills the dice area and is interactive
+    renderer.domElement.style.position = 'absolute';
     renderer.domElement.style.top = '0';
     renderer.domElement.style.left = '0';
-    renderer.domElement.style.pointerEvents = 'none';
-    renderer.domElement.style.zIndex = '9999';
+    renderer.domElement.style.cursor = 'default';
 
     // ── Lighting ──
     ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
 
     dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    dirLight.position.set(5, 15, 5);
+    dirLight.position.set(3, 15, 5);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 1024;
     dirLight.shadow.mapSize.height = 1024;
@@ -131,9 +132,9 @@ const DiceEngine = (function () {
     dirLight.shadow.camera.bottom = -15;
     scene.add(dirLight);
 
-    // ── Invisible ground plane for shadows ──
-    const groundGeom = new THREE.PlaneGeometry(40, 40);
-    const groundMat = new THREE.ShadowMaterial({ opacity: 0.15 });
+    // ── Ground plane for shadows (subtle on dark background) ──
+    const groundGeom = new THREE.PlaneGeometry(60, 60);
+    const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
     const groundMesh = new THREE.Mesh(groundGeom, groundMat);
     groundMesh.rotation.x = -Math.PI / 2;
     groundMesh.position.y = GROUND_Y;
@@ -190,26 +191,33 @@ const DiceEngine = (function () {
     startLoop();
   }
 
-  // ── Walls (invisible boundaries matching screen edges) ──
+  // ── Get container dimensions ──
+  function getContainerRect() {
+    return diceArea.getBoundingClientRect();
+  }
+
+  // ── Walls (invisible boundaries matching dice tray edges) ──
   function buildWalls() {
     // Remove old wall bodies
     world.bodies.forEach(b => {
       if (b.userData && b.userData.isWall) world.removeBody(b);
     });
 
-    // Convert screen edges to world coordinates
+    const rect = getContainerRect();
+
+    // Convert dice area edges to world coordinates
     const corners = [
-      screenToWorld(0, 0),
-      screenToWorld(window.innerWidth, 0),
-      screenToWorld(window.innerWidth, window.innerHeight),
-      screenToWorld(0, window.innerHeight),
+      screenToWorld(0, 0),              // top-left
+      screenToWorld(rect.width, 0),     // top-right
+      screenToWorld(rect.width, rect.height), // bottom-right
+      screenToWorld(0, rect.height),    // bottom-left
     ];
 
-    const minX = Math.min(corners[0].x, corners[3].x) - 1;
-    const maxX = Math.max(corners[1].x, corners[2].x) + 1;
-    const minZ = Math.min(corners[0].z, corners[1].z) - 1;
-    const maxZ = Math.max(corners[2].z, corners[3].z) + 1;
-    const wallHeight = 4;
+    const minX = Math.min(corners[0].x, corners[3].x);
+    const maxX = Math.max(corners[1].x, corners[2].x);
+    const minZ = Math.min(corners[0].z, corners[1].z);
+    const maxZ = Math.max(corners[2].z, corners[3].z);
+    const wallHeight = 6;
     const wallThick = 1;
 
     const wallDefs = [
@@ -235,11 +243,12 @@ const DiceEngine = (function () {
     });
   }
 
-  // ── Screen-to-world coordinate conversion ──
+  // ── Screen-to-world coordinate conversion (relative to dice area) ──
   function screenToWorld(sx, sy) {
+    const rect = getContainerRect();
     const ndc = new THREE.Vector2(
-      (sx / window.innerWidth) * 2 - 1,
-      -(sy / window.innerHeight) * 2 + 1
+      (sx / rect.width) * 2 - 1,
+      -(sy / rect.height) * 2 + 1
     );
     raycaster.setFromCamera(ndc, camera);
     const target = new THREE.Vector3();
@@ -271,6 +280,14 @@ const DiceEngine = (function () {
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, size - 4, size - 4);
 
+    // Rounded corners for die face
+    const cornerR = size * 0.08;
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, size, size, cornerR);
+    ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+
     // Pips
     const pips = PIP_PATTERNS[faceValue] || [];
     const pipRadius = size * 0.075;
@@ -288,7 +305,7 @@ const DiceEngine = (function () {
       ctx.fillStyle = skin.pipColor;
       ctx.fill();
 
-      // Pip inset shadow
+      // Pip inset highlight
       ctx.beginPath();
       ctx.arc(cx, cy - 1, pipRadius * 0.6, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,0.15)';
@@ -326,24 +343,24 @@ const DiceEngine = (function () {
     }
   }
 
-  // ── Add a die ──
+  // ── Add a die (spawns from top of dice tray, falls with spin) ──
   function addDie() {
     if (dice.length >= MAX_DICE) return;
 
-    // Spawn near screen center, random offset
-    const center = screenToWorld(
-      window.innerWidth / 2 + (Math.random() - 0.5) * 100,
-      window.innerHeight / 2 + (Math.random() - 0.5) * 100
-    );
+    const rect = getContainerRect();
+
+    // Spawn at random X across top of tray
+    const spawnScreenX = rect.width * (0.2 + Math.random() * 0.6);
+    const topWorld = screenToWorld(spawnScreenX, rect.height * 0.3);
 
     // Three.js mesh
     const geometry = new THREE.BoxGeometry(DIE_SIZE, DIE_SIZE, DIE_SIZE);
-    // Round the edges slightly with a bevel-like approach
     const materials = buildDieMaterials();
     const mesh = new THREE.Mesh(geometry, materials);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
-    mesh.position.set(center.x, GROUND_Y + HALF + 0.01, center.z);
+    // Start above visible area
+    mesh.position.set(topWorld.x, 6, topWorld.z);
     scene.add(mesh);
 
     // Cannon-ES body
@@ -354,16 +371,28 @@ const DiceEngine = (function () {
       linearDamping: settings.linearDamping,
       angularDamping: settings.angularDamping,
     });
-    body.position.set(center.x, GROUND_Y + HALF + 0.01, center.z);
-    // Random initial rotation for variety
+    body.position.set(topWorld.x, 6, topWorld.z);
+    // Random initial rotation
     body.quaternion.setFromEuler(
       Math.random() * Math.PI * 2,
       Math.random() * Math.PI * 2,
       Math.random() * Math.PI * 2
     );
+    // Spin as it falls
+    body.angularVelocity.set(
+      (Math.random() - 0.5) * 12,
+      (Math.random() - 0.5) * 8,
+      (Math.random() - 0.5) * 12
+    );
+    // Slight horizontal push for variety
+    body.velocity.set(
+      (Math.random() - 0.5) * 3,
+      -2,
+      (Math.random() - 0.5) * 2
+    );
     world.addBody(body);
 
-    // Result label (DOM overlay)
+    // Result label (DOM overlay inside dice container)
     const resultEl = document.createElement('div');
     resultEl.className = 'die-result';
     container.appendChild(resultEl);
@@ -372,7 +401,7 @@ const DiceEngine = (function () {
       mesh,
       body,
       resultEl,
-      settled: true,
+      settled: false,
       settleFrames: 0,
       selected: false,
       lastResult: null,
@@ -383,7 +412,7 @@ const DiceEngine = (function () {
     // GSAP spawn animation
     if (typeof gsap !== 'undefined') {
       mesh.scale.set(0.01, 0.01, 0.01);
-      gsap.to(mesh.scale, { x: 1, y: 1, z: 1, duration: 0.4, ease: 'back.out(1.7)' });
+      gsap.to(mesh.scale, { x: 1, y: 1, z: 1, duration: 0.3, ease: 'back.out(1.7)' });
     }
   }
 
@@ -430,21 +459,9 @@ const DiceEngine = (function () {
   function setupMouseInteraction() {
     const canvas = renderer.domElement;
 
-    // We need pointer events on the canvas for dice interaction
-    // but not to block clicks on the sheet underneath
-    // Strategy: canvas is pointer-events:none, we listen on document
-    // and only intercept when a die is hit
-
-    let pointerDown = false;
-    let pointerStartTime = 0;
-    let pointerMoved = false;
-
-    document.addEventListener('pointerdown', function (e) {
+    // Direct canvas event handling — no need to filter sheet elements
+    canvas.addEventListener('pointerdown', function (e) {
       if (e.ctrlKey || e.metaKey) return; // let selection box handle
-      // Skip dice-specific UI panels
-      if (e.target.closest('.dice-toolbar, .dice-settings')) return;
-      // Skip interactive form elements (character sheet inputs, buttons, etc.)
-      if (e.target.closest('input, textarea, select, button, a, label, .tab-bar')) return;
 
       updateMouse(e);
       const hit = raycastDice();
@@ -454,9 +471,6 @@ const DiceEngine = (function () {
         e.stopPropagation();
         isDragging = true;
         dragDie = hit;
-        pointerDown = true;
-        pointerStartTime = Date.now();
-        pointerMoved = false;
 
         // Wake the body
         dragDie.body.wakeUp();
@@ -476,22 +490,26 @@ const DiceEngine = (function () {
           dragDie.resultEl.style.opacity = '0';
         }
 
-        // Enable pointer capture on canvas for drag
-        renderer.domElement.style.pointerEvents = 'auto';
-        renderer.domElement.setPointerCapture(e.pointerId);
+        canvas.style.cursor = 'grabbing';
+        canvas.setPointerCapture(e.pointerId);
       }
     });
 
-    document.addEventListener('pointermove', function (e) {
-      if (!isDragging || !dragDie) return;
-      pointerMoved = true;
+    canvas.addEventListener('pointermove', function (e) {
+      if (!isDragging || !dragDie) {
+        // Hover cursor change
+        updateMouse(e);
+        const hit = raycastDice();
+        canvas.style.cursor = hit ? 'grab' : 'default';
+        return;
+      }
 
       updateMouse(e);
       raycaster.ray.intersectPlane(dragPlane, dragTarget);
 
       // Track velocity for throw
       const newPos = dragTarget.clone().sub(dragOffset);
-      dragVelocity.copy(newPos).sub(lastDragPos).multiplyScalar(60); // 60fps scale
+      dragVelocity.copy(newPos).sub(lastDragPos).multiplyScalar(60);
       lastDragPos.copy(newPos);
 
       // Move the body to follow mouse
@@ -502,14 +520,14 @@ const DiceEngine = (function () {
       dragDie.body.angularVelocity.set(0, 0, 0);
     });
 
-    document.addEventListener('pointerup', function (e) {
+    canvas.addEventListener('pointerup', function (e) {
       if (!isDragging || !dragDie) return;
 
       // Release: apply throw velocity
       const throwScale = 0.8;
       dragDie.body.velocity.set(
         dragVelocity.x * throwScale,
-        -2, // slight downward to ensure landing
+        -2,
         dragVelocity.z * throwScale
       );
 
@@ -533,14 +551,15 @@ const DiceEngine = (function () {
 
       isDragging = false;
       dragDie = null;
-      renderer.domElement.style.pointerEvents = 'none';
-      renderer.domElement.releasePointerCapture(e.pointerId);
+      canvas.style.cursor = 'default';
+      canvas.releasePointerCapture(e.pointerId);
     });
   }
 
   function updateMouse(e) {
-    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const rect = getContainerRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
   }
 
@@ -593,15 +612,16 @@ const DiceEngine = (function () {
   // ── Selection box (Ctrl+Click+Drag) ──
   function setupSelectionBox() {
     selBox = document.getElementById('selection-box');
+    const canvas = renderer.domElement;
 
-    document.addEventListener('pointerdown', function (e) {
+    canvas.addEventListener('pointerdown', function (e) {
       if (!e.ctrlKey && !e.metaKey) return;
-      if (e.target.closest('.die-result')) return;
 
       isSelecting = true;
-      selStart = { x: e.clientX, y: e.clientY };
-      selBox.style.left = e.clientX + 'px';
-      selBox.style.top = e.clientY + 'px';
+      const rect = getContainerRect();
+      selStart = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      selBox.style.left = selStart.x + 'px';
+      selBox.style.top = selStart.y + 'px';
       selBox.style.width = '0';
       selBox.style.height = '0';
       selBox.style.display = 'block';
@@ -610,10 +630,13 @@ const DiceEngine = (function () {
 
     document.addEventListener('pointermove', function (e) {
       if (!isSelecting) return;
-      const x = Math.min(e.clientX, selStart.x);
-      const y = Math.min(e.clientY, selStart.y);
-      const w = Math.abs(e.clientX - selStart.x);
-      const h = Math.abs(e.clientY - selStart.y);
+      const rect = getContainerRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+      const x = Math.min(localX, selStart.x);
+      const y = Math.min(localY, selStart.y);
+      const w = Math.abs(localX - selStart.x);
+      const h = Math.abs(localY - selStart.y);
       selBox.style.left = x + 'px';
       selBox.style.top = y + 'px';
       selBox.style.width = w + 'px';
@@ -625,19 +648,22 @@ const DiceEngine = (function () {
       isSelecting = false;
       selBox.style.display = 'none';
 
-      const rect = {
-        left: Math.min(e.clientX, selStart.x),
-        top: Math.min(e.clientY, selStart.y),
-        right: Math.max(e.clientX, selStart.x),
-        bottom: Math.max(e.clientY, selStart.y),
+      const rect = getContainerRect();
+      const localX = e.clientX - rect.left;
+      const localY = e.clientY - rect.top;
+      const selRect = {
+        left: Math.min(localX, selStart.x),
+        top: Math.min(localY, selStart.y),
+        right: Math.max(localX, selStart.x),
+        bottom: Math.max(localY, selStart.y),
       };
 
       clearSelection();
 
       dice.forEach(function (die) {
         const screenPos = worldToScreen(die.mesh.position);
-        if (screenPos.x >= rect.left && screenPos.x <= rect.right &&
-            screenPos.y >= rect.top && screenPos.y <= rect.bottom) {
+        if (screenPos.x >= selRect.left && screenPos.x <= selRect.right &&
+            screenPos.y >= selRect.top && screenPos.y <= selRect.bottom) {
           die.selected = true;
           selectedDice.push(die);
         }
@@ -654,12 +680,10 @@ const DiceEngine = (function () {
       });
     });
 
-    // Click on empty space to deselect
-    document.addEventListener('click', function (e) {
+    // Click on empty space in dice area to deselect
+    canvas.addEventListener('click', function (e) {
       if (e.ctrlKey || e.metaKey) return;
-      if (e.target.closest('.dice-toolbar, .dice-settings')) return;
 
-      // Check if we clicked on a die
       updateMouse(e);
       const hit = raycastDice();
       if (!hit) {
@@ -677,9 +701,10 @@ const DiceEngine = (function () {
 
   function worldToScreen(position) {
     const vec = position.clone().project(camera);
+    const rect = getContainerRect();
     return {
-      x: (vec.x * 0.5 + 0.5) * window.innerWidth,
-      y: (-vec.y * 0.5 + 0.5) * window.innerHeight,
+      x: (vec.x * 0.5 + 0.5) * rect.width,
+      y: (-vec.y * 0.5 + 0.5) * rect.height,
     };
   }
 
@@ -787,9 +812,11 @@ const DiceEngine = (function () {
 
   // ── Resize ──
   function onResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    const rect = getContainerRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    camera.aspect = rect.width / rect.height;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(rect.width, rect.height);
     buildWalls();
   }
 

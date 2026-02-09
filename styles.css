@@ -41,18 +41,57 @@ body {
   background: var(--bg);
   color: var(--text);
   line-height: 1.4;
-  min-height: 100vh;
-  padding: 1rem;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ── Page Layout (sheet left, dice tray right) ── */
+.page-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Sheet Container ── */
 .sheet {
-  max-width: 1100px;
-  margin: 0 auto;
+  flex: 0 1 900px;
+  max-width: 900px;
   background: var(--sheet-bg);
-  border: 3px solid var(--border);
+  border-right: 3px solid var(--border);
   padding: 1.5rem;
   position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ── Dice Tray (right panel) ── */
+#dice-area {
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+  overflow: hidden;
+  background: #1c1916;
+  background-image:
+    radial-gradient(ellipse at 50% 35%, rgba(55, 45, 35, 0.7) 0%, transparent 65%);
+  box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.6);
+}
+
+.dice-tray-label {
+  position: absolute;
+  top: 0.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-title);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.12);
+  text-transform: uppercase;
+  pointer-events: none;
+  z-index: 1;
+  user-select: none;
 }
 
 /* ── HEADER ── */
@@ -1383,33 +1422,32 @@ textarea {
    ════════════════════════════════════════ */
 
 #dice-container {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 9999;
   overflow: hidden;
+  z-index: 1;
 }
 
 /* ── Result label after settle (DOM overlay) ── */
 .die-result {
-  position: fixed;
+  position: absolute;
   transform: translateX(-50%);
   font-family: var(--font-title);
   font-weight: 900;
   font-size: 0.85rem;
-  color: var(--text);
+  color: #e8e0d0;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
 }
 
 /* ── Selection box ── */
 .selection-box {
-  position: fixed;
+  position: absolute;
   border: 2px dashed rgba(100, 180, 255, 0.7);
   background: rgba(100, 180, 255, 0.1);
   z-index: 10004;
@@ -1418,9 +1456,10 @@ textarea {
 }
 
 .dice-toolbar {
-  position: fixed;
+  position: absolute;
   bottom: 1rem;
-  right: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   gap: 0.4rem;
   z-index: 10002;
@@ -1430,18 +1469,20 @@ textarea {
   padding: 0.4rem 0.75rem;
   font-weight: 700;
   font-size: 0.85rem;
-  border: 2px solid var(--border);
+  border: 2px solid rgba(255,255,255,0.25);
   border-radius: 4px;
-  background: var(--sheet-bg);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
   cursor: pointer;
   font-family: var(--font-title);
   letter-spacing: 0.04em;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
 .dice-toolbar button:hover {
-  background: var(--border);
-  color: var(--sheet-bg);
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border-color: rgba(255,255,255,0.5);
 }
 
 /* ════════════════════════════════════════
@@ -1450,18 +1491,19 @@ textarea {
 
 .dice-settings {
   position: fixed;
-  bottom: 3.5rem;
+  bottom: 4rem;
   right: 1rem;
   width: 240px;
-  background: #1a1a1a;
+  background: #111;
   color: #e8e8e8;
   border-radius: 8px;
   z-index: 10003;
   opacity: 0;
   transform: translateY(10px) scale(0.95);
   pointer-events: none;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5);
   overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .dice-settings.open {
@@ -1661,16 +1703,49 @@ textarea {
   border-color: #888;
 }
 
+/* ── Responsive: stack on narrow screens ── */
+@media (max-width: 1100px) {
+  .page-layout {
+    flex-direction: column;
+    height: auto;
+    overflow: auto;
+  }
+  body {
+    overflow: auto;
+    height: auto;
+  }
+  .sheet {
+    flex: none;
+    max-width: none;
+    width: 100%;
+    border-right: none;
+    border-bottom: 3px solid var(--border);
+    overflow-y: visible;
+  }
+  #dice-area {
+    min-width: auto;
+    height: 50vh;
+    min-height: 350px;
+  }
+}
+
 /* ── Print styles ── */
 @media print {
   body {
     background: #fff;
     padding: 0;
+    overflow: visible;
+    height: auto;
+  }
+  .page-layout {
+    display: block;
+    height: auto;
   }
   .sheet {
     border: none;
     padding: 0;
     max-width: none;
+    overflow: visible;
   }
   .toolbar {
     display: none;
@@ -1692,10 +1767,8 @@ textarea {
   .faction-clock-remove {
     display: none;
   }
-  #dice-container,
-  .dice-toolbar,
-  .dice-settings,
-  .selection-box {
+  #dice-area,
+  .dice-settings {
     display: none;
   }
 }
