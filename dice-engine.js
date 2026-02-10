@@ -52,11 +52,20 @@ const DiceEngine = (function () {
   let ambientLight, dirLight;
   let lightingIntensity = 1.0;
   let groundMesh; // Three.js shadow receiver
-  let bumpers = []; // { body, mesh } for pinball bumpers
   let bumperMaterial;
-  let propellerBody = null, propellerGroup = null;
-  let propellerAngle = 0;
   const propellerSpeed = 1.5; // rad/s
+
+  // ── Obstacle system ──
+  let obstacles = []; // { type, body, mesh, origin, direction, phase, dragging }
+  let dragObstacle = null;
+  let isDraggingObstacle = false;
+  let obstDragOffset = new THREE.Vector3();
+  let obstLastDragPos = new THREE.Vector3();
+  let obstDragVelocity = new THREE.Vector3();
+  let longPressTimer = null;
+  let longPressScreenPos = null;
+  const LONG_PRESS_MS = 2000;
+  const FLING_REMOVE_SPEED = 10;
 
   // World bounds (computed from container)
   let boundsMinX = -5, boundsMaxX = 5;
@@ -192,10 +201,10 @@ const DiceEngine = (function () {
     world.addBody(groundBody);
 
     buildWalls();
-    buildBumpers();
-    buildPropeller();
+    setupDefaultObstacles();
     setupMouseInteraction();
     setupSelectionBox();
+    setupRadialMenu();
 
     document.querySelectorAll('.dice-count-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -281,125 +290,239 @@ const DiceEngine = (function () {
     });
   }
 
-  // ── Pinball bumpers — static pegs that dice bounce off ──
-  function buildBumpers() {
-    // Clean up old bumpers
-    bumpers.forEach(b => {
-      world.removeBody(b.body);
-      scene.remove(b.mesh);
-      b.mesh.geometry.dispose();
-      b.mesh.material.dispose();
-    });
-    bumpers = [];
+  // ── Obstacle System ──────────────────────
+  // Types: peg, spinner, goblin, pig, puncher
 
-    const width = boundsMaxX - boundsMinX;
-    const height = boundsMaxY - floorY;
-    const centerX = (boundsMinX + boundsMaxX) / 2;
-    const bumperR = 0.55;
-    const channelHalf = CHANNEL_DEPTH / 2;
-
-    // Staggered layout — 3 rows (no center row 2, propeller goes there)
-    const positions = [
-      // Row 1 (upper, 68%): 2 bumpers
-      { x: centerX - width * 0.22, y: floorY + height * 0.68 },
-      { x: centerX + width * 0.22, y: floorY + height * 0.68 },
-      // Row 2 (middle, 46%): 2 bumpers (center removed for propeller)
-      { x: centerX - width * 0.32, y: floorY + height * 0.46 },
-      { x: centerX + width * 0.32, y: floorY + height * 0.46 },
-      // Row 3 (lower, 24%): 2 bumpers
-      { x: centerX - width * 0.18, y: floorY + height * 0.24 },
-      { x: centerX + width * 0.18, y: floorY + height * 0.24 },
-    ];
-
-    // Cylinder rotation: Y axis → Z axis
-    const rotQuat = new CANNON.Quaternion();
-    rotQuat.setFromEuler(Math.PI / 2, 0, 0);
-
-    positions.forEach(pos => {
-      // Physics: cylinder spanning full channel depth
-      const cylinderShape = new CANNON.Cylinder(bumperR, bumperR, CHANNEL_DEPTH + 1, 12);
-      const body = new CANNON.Body({
-        type: CANNON.Body.STATIC,
-        material: bumperMaterial,
-      });
-      body.addShape(cylinderShape, new CANNON.Vec3(0, 0, 0), rotQuat);
-      body.position.set(pos.x, pos.y, 0);
-      world.addBody(body);
-
-      // Visual: cylinder along Z
-      const geom = new THREE.CylinderGeometry(bumperR, bumperR, channelHalf * 1.6, 20);
-      geom.rotateX(Math.PI / 2);
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x997755,
-        emissive: 0x664422,
-        emissiveIntensity: 0.35,
-        roughness: 0.35,
-        metalness: 0.5,
-      });
-      const mesh = new THREE.Mesh(geom, mat);
-      mesh.position.set(pos.x, pos.y, 0);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      scene.add(mesh);
-
-      bumpers.push({ body, mesh });
-    });
+  function createEmojiTexture(emoji, size) {
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.font = size * 0.75 + 'px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, size / 2, size / 2);
+    return new THREE.CanvasTexture(canvas);
   }
 
-  // ── Spinning propeller obstacle ──
-  function buildPropeller() {
-    // Clean up old
-    if (propellerBody) { world.removeBody(propellerBody); propellerBody = null; }
-    if (propellerGroup) {
-      propellerGroup.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
-      scene.remove(propellerGroup);
-      propellerGroup = null;
+  function createObstacle(type, x, y) {
+    const channelHalf = CHANNEL_DEPTH / 2;
+    const rotQuat = new CANNON.Quaternion();
+    rotQuat.setFromEuler(Math.PI / 2, 0, 0);
+    let body, mesh;
+    const obs = { type, body: null, mesh: null, origin: { x, y }, direction: 1, phase: Math.random() * Math.PI * 2, dragging: false };
+
+    if (type === 'peg') {
+      const r = 0.55;
+      const shape = new CANNON.Cylinder(r, r, CHANNEL_DEPTH + 1, 12);
+      body = new CANNON.Body({ type: CANNON.Body.STATIC, material: bumperMaterial });
+      body.addShape(shape, new CANNON.Vec3(0, 0, 0), rotQuat);
+      body.position.set(x, y, 0);
+      const geom = new THREE.CylinderGeometry(r, r, channelHalf * 1.6, 20);
+      geom.rotateX(Math.PI / 2);
+      mesh = new THREE.Mesh(geom, new THREE.MeshStandardMaterial({
+        color: 0x997755, emissive: 0x664422, emissiveIntensity: 0.35, roughness: 0.35, metalness: 0.5,
+      }));
+      mesh.castShadow = true; mesh.receiveShadow = true;
+
+    } else if (type === 'spinner') {
+      const armHL = 1.5, armHT = 0.12;
+      body = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: bumperMaterial });
+      body.addShape(new CANNON.Box(new CANNON.Vec3(armHL, armHT, channelHalf)));
+      body.addShape(new CANNON.Box(new CANNON.Vec3(armHT, armHL, channelHalf)));
+      body.position.set(x, y, 0);
+      const armMat = new THREE.MeshStandardMaterial({ color: 0xcc8844, emissive: 0x885522, emissiveIntensity: 0.3, metalness: 0.6, roughness: 0.3 });
+      mesh = new THREE.Group();
+      const a1 = new THREE.Mesh(new THREE.BoxGeometry(armHL * 2, armHT * 2, channelHalf * 1.6), armMat); a1.castShadow = true;
+      const a2 = new THREE.Mesh(new THREE.BoxGeometry(armHT * 2, armHL * 2, channelHalf * 1.6), armMat); a2.castShadow = true;
+      const hub = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0xddaa55, metalness: 0.8, roughness: 0.2 }));
+      hub.castShadow = true;
+      mesh.add(a1, a2, hub);
+
+    } else if (type === 'goblin') {
+      const r = 0.6;
+      body = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: bumperMaterial });
+      body.addShape(new CANNON.Sphere(r));
+      body.position.set(x, y, 0);
+      const tex = createEmojiTexture('\u{1F47A}', 128); // 👺
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(r * 2.4, r * 2.4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+      obs.direction = Math.random() > 0.5 ? 1 : -1;
+
+    } else if (type === 'pig') {
+      const r = 0.7;
+      const shape = new CANNON.Cylinder(r, r, CHANNEL_DEPTH + 1, 12);
+      body = new CANNON.Body({ type: CANNON.Body.STATIC, material: bumperMaterial });
+      body.addShape(shape, new CANNON.Vec3(0, 0, 0), rotQuat);
+      body.position.set(x, y, 0);
+      const tex = createEmojiTexture('\u{1F437}', 128); // 🐷
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(r * 2.4, r * 2.4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+      mesh.castShadow = true;
+
+    } else if (type === 'puncher') {
+      const r = 0.5;
+      body = new CANNON.Body({ type: CANNON.Body.KINEMATIC, material: bumperMaterial });
+      body.addShape(new CANNON.Sphere(r));
+      body.position.set(x, y, 0);
+      const tex = createEmojiTexture('\u{1F44A}', 128); // 👊
+      mesh = new THREE.Mesh(new THREE.PlaneGeometry(r * 2.4, r * 2.4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+      obs.direction = Math.random() > 0.5 ? 1 : -1;
     }
 
+    obs.body = body;
+    obs.mesh = mesh;
+    mesh.position.set(x, y, 0);
+    world.addBody(body);
+    scene.add(mesh);
+    obstacles.push(obs);
+    return obs;
+  }
+
+  function removeObstacle(obs) {
+    world.removeBody(obs.body);
+    scene.remove(obs.mesh);
+    if (obs.mesh.type === 'Group') {
+      obs.mesh.children.forEach(c => { if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); });
+    } else {
+      if (obs.mesh.geometry) obs.mesh.geometry.dispose();
+      if (obs.mesh.material) { if (obs.mesh.material.map) obs.mesh.material.map.dispose(); obs.mesh.material.dispose(); }
+    }
+    const idx = obstacles.indexOf(obs);
+    if (idx >= 0) obstacles.splice(idx, 1);
+  }
+
+  function setupDefaultObstacles() {
     const width = boundsMaxX - boundsMinX;
     const height = boundsMaxY - floorY;
     const cx = (boundsMinX + boundsMaxX) / 2;
-    const cy = floorY + height * 0.55;
-    const armHalfLen = Math.min(width * 0.12, 1.6);
-    const armHalfThick = 0.12;
-    const channelHalf = CHANNEL_DEPTH / 2;
+    // Row 1: 2 pegs
+    createObstacle('peg', cx - width * 0.22, floorY + height * 0.68);
+    createObstacle('peg', cx + width * 0.22, floorY + height * 0.68);
+    // Row 2: spinner center + 2 pegs
+    createObstacle('peg', cx - width * 0.32, floorY + height * 0.46);
+    createObstacle('spinner', cx, floorY + height * 0.55);
+    createObstacle('peg', cx + width * 0.32, floorY + height * 0.46);
+    // Row 3: 2 pegs
+    createObstacle('peg', cx - width * 0.18, floorY + height * 0.24);
+    createObstacle('peg', cx + width * 0.18, floorY + height * 0.24);
+  }
 
-    // Physics: kinematic spinning cross
-    propellerBody = new CANNON.Body({
-      type: CANNON.Body.KINEMATIC,
-      material: bumperMaterial,
+  function raycastObstacles() {
+    const meshes = [];
+    const map = new Map();
+    obstacles.forEach(obs => {
+      if (obs.mesh.type === 'Group') {
+        obs.mesh.children.forEach(c => { meshes.push(c); map.set(c, obs); });
+      } else {
+        meshes.push(obs.mesh); map.set(obs.mesh, obs);
+      }
     });
-    propellerBody.addShape(new CANNON.Box(new CANNON.Vec3(armHalfLen, armHalfThick, channelHalf)));
-    propellerBody.addShape(new CANNON.Box(new CANNON.Vec3(armHalfThick, armHalfLen, channelHalf)));
-    propellerBody.position.set(cx, cy, 0);
-    world.addBody(propellerBody);
+    const hits = raycaster.intersectObjects(meshes);
+    return hits.length > 0 ? (map.get(hits[0].object) || null) : null;
+  }
 
-    // Visual
-    const armMat = new THREE.MeshStandardMaterial({
-      color: 0xcc8844,
-      emissive: 0x885522,
-      emissiveIntensity: 0.3,
-      metalness: 0.6,
-      roughness: 0.3,
+  function updateObstacleBehaviors(dt) {
+    const t = Date.now() / 1000;
+    obstacles.forEach(obs => {
+      if (obs.dragging) return;
+
+      if (obs.type === 'spinner') {
+        obs.phase += propellerSpeed * dt;
+        obs.body.quaternion.setFromEuler(0, 0, obs.phase);
+        if (obs.mesh.type === 'Group') obs.mesh.rotation.z = obs.phase;
+      } else if (obs.type === 'goblin') {
+        const amplitude = 2.5;
+        const speed = 1.2;
+        const offset = Math.sin(t * speed + obs.phase) * amplitude;
+        obs.body.position.x = obs.origin.x + offset;
+        obs.mesh.position.x = obs.body.position.x;
+        // Flip direction visually
+        obs.mesh.scale.x = Math.cos(t * speed + obs.phase) > 0 ? 1 : -1;
+      } else if (obs.type === 'puncher') {
+        const speed = 2.5;
+        const cycle = ((t * speed + obs.phase) % 1 + 1) % 1;
+        let ext = 0;
+        if (cycle < 0.12) ext = cycle / 0.12;
+        else if (cycle < 0.22) ext = 1;
+        else if (cycle < 0.34) ext = 1 - (cycle - 0.22) / 0.12;
+        const punchDist = 1.8;
+        obs.body.position.x = obs.origin.x + ext * obs.direction * punchDist;
+        obs.mesh.position.x = obs.body.position.x;
+        obs.mesh.scale.x = obs.direction;
+      }
     });
-    propellerGroup = new THREE.Group();
+  }
 
-    const arm1 = new THREE.Mesh(
-      new THREE.BoxGeometry(armHalfLen * 2, armHalfThick * 2, channelHalf * 1.6), armMat);
-    arm1.castShadow = true;
-    const arm2 = new THREE.Mesh(
-      new THREE.BoxGeometry(armHalfThick * 2, armHalfLen * 2, channelHalf * 1.6), armMat);
-    arm2.castShadow = true;
+  // ── Long press & radial menu ──
+  function startLongPress(screenX, screenY) {
+    cancelLongPress();
+    longPressScreenPos = { x: screenX, y: screenY };
+    const ring = document.getElementById('long-press-ring');
+    if (ring) {
+      const rect = getContainerRect();
+      ring.style.left = (screenX - rect.left) + 'px';
+      ring.style.top = (screenY - rect.top) + 'px';
+      ring.classList.remove('active');
+      void ring.offsetWidth; // reflow
+      ring.classList.add('active');
+    }
+    longPressTimer = setTimeout(() => {
+      showRadialMenu(screenX, screenY);
+    }, LONG_PRESS_MS);
+  }
 
-    // Center hub
-    const hubMat = new THREE.MeshStandardMaterial({
-      color: 0xddaa55, metalness: 0.8, roughness: 0.2 });
-    const hub = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), hubMat);
-    hub.castShadow = true;
+  function cancelLongPress() {
+    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    const ring = document.getElementById('long-press-ring');
+    if (ring) ring.classList.remove('active');
+  }
 
-    propellerGroup.add(arm1, arm2, hub);
-    propellerGroup.position.set(cx, cy, 0);
-    scene.add(propellerGroup);
+  function showRadialMenu(screenX, screenY) {
+    cancelLongPress();
+    const menu = document.getElementById('radial-menu');
+    if (!menu) return;
+    const rect = getContainerRect();
+    const lx = screenX - rect.left;
+    const ly = screenY - rect.top;
+    menu.style.left = lx + 'px';
+    menu.style.top = ly + 'px';
+    // Position items in a circle
+    const items = menu.querySelectorAll('.radial-item');
+    const radius = 55;
+    items.forEach((item, i) => {
+      const angle = (-Math.PI / 2) + (i / items.length) * Math.PI * 2;
+      item.style.left = (Math.cos(angle) * radius) + 'px';
+      item.style.top = (Math.sin(angle) * radius) + 'px';
+    });
+    menu.classList.add('open');
+    // Store world position for placing obstacle
+    const wp = screenToWorld(lx, ly);
+    menu.dataset.wx = wp.x;
+    menu.dataset.wy = wp.y;
+  }
+
+  function hideRadialMenu() {
+    const menu = document.getElementById('radial-menu');
+    if (menu) menu.classList.remove('open');
+  }
+
+  function setupRadialMenu() {
+    const menu = document.getElementById('radial-menu');
+    if (!menu) return;
+    menu.querySelectorAll('.radial-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const type = btn.dataset.obstacle;
+        const wx = parseFloat(menu.dataset.wx) || 0;
+        const wy = parseFloat(menu.dataset.wy) || 0;
+        createObstacle(type, wx, wy);
+        hideRadialMenu();
+      });
+    });
+    // Close on outside click
+    document.addEventListener('pointerdown', (e) => {
+      if (!menu.contains(e.target) && menu.classList.contains('open')) {
+        hideRadialMenu();
+      }
+    });
   }
 
   // ── Screen-to-world: intersects Z=0 plane (the view plane) ──
@@ -596,95 +719,143 @@ const DiceEngine = (function () {
     }
   }
 
-  // ── Mouse Interaction — grab & throw in XY plane ──
+  // ── Mouse Interaction — grab & throw dice + obstacles, long press ──
   function setupMouseInteraction() {
     const canvas = renderer.domElement;
 
     canvas.addEventListener('pointerdown', function (e) {
       if (e.ctrlKey || e.metaKey) return;
-
+      hideRadialMenu();
       updateMouse(e);
-      const hit = raycastDice();
 
-      if (hit) {
-        e.preventDefault();
-        e.stopPropagation();
-        isDragging = true;
-        dragDie = hit;
-
-        dragDie.body.wakeUp();
-        dragDie.settled = false;
-        dragDie.settleFrames = 0;
-
-        // Offset on the Z=0 view plane
+      // Priority 1: dice
+      const dieHit = raycastDice();
+      if (dieHit) {
+        e.preventDefault(); e.stopPropagation();
+        isDragging = true; dragDie = dieHit;
+        dragDie.body.wakeUp(); dragDie.settled = false; dragDie.settleFrames = 0;
         raycaster.ray.intersectPlane(viewPlane, dragTarget);
-        dragOffset.copy(dragTarget).sub(new THREE.Vector3(
-          dragDie.body.position.x, dragDie.body.position.y, 0
-        ));
-        lastDragPos.copy(dragTarget);
-        dragVelocity.set(0, 0, 0);
-
+        dragOffset.copy(dragTarget).sub(new THREE.Vector3(dragDie.body.position.x, dragDie.body.position.y, 0));
+        lastDragPos.copy(dragTarget); dragVelocity.set(0, 0, 0);
         if (dragDie.resultEl) dragDie.resultEl.style.opacity = '0';
         hideHighestRoll();
-
-        canvas.style.cursor = 'grabbing';
-        canvas.setPointerCapture(e.pointerId);
-      }
-    });
-
-    canvas.addEventListener('pointermove', function (e) {
-      if (!isDragging || !dragDie) {
-        updateMouse(e);
-        const hit = raycastDice();
-        canvas.style.cursor = hit ? 'grab' : 'default';
+        canvas.style.cursor = 'grabbing'; canvas.setPointerCapture(e.pointerId);
         return;
       }
 
+      // Priority 2: obstacles
+      const obsHit = raycastObstacles();
+      if (obsHit) {
+        e.preventDefault(); e.stopPropagation();
+        isDraggingObstacle = true; dragObstacle = obsHit; obsHit.dragging = true;
+        raycaster.ray.intersectPlane(viewPlane, dragTarget);
+        obstDragOffset.copy(dragTarget).sub(new THREE.Vector3(obsHit.body.position.x, obsHit.body.position.y, 0));
+        obstLastDragPos.copy(dragTarget); obstDragVelocity.set(0, 0, 0);
+        // Ensure kinematic so it can be moved
+        obsHit.body.type = CANNON.Body.KINEMATIC;
+        canvas.style.cursor = 'grabbing'; canvas.setPointerCapture(e.pointerId);
+        return;
+      }
+
+      // Priority 3: long press on empty space
+      startLongPress(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('pointermove', function (e) {
+      // Obstacle drag
+      if (isDraggingObstacle && dragObstacle) {
+        updateMouse(e);
+        raycaster.ray.intersectPlane(viewPlane, dragTarget);
+        const newPos = dragTarget.clone().sub(obstDragOffset);
+        obstDragVelocity.copy(newPos).sub(obstLastDragPos).multiplyScalar(60);
+        obstLastDragPos.copy(newPos);
+        dragObstacle.body.position.x = newPos.x;
+        dragObstacle.body.position.y = newPos.y;
+        dragObstacle.body.position.z = 0;
+        dragObstacle.mesh.position.set(newPos.x, newPos.y, 0);
+        dragObstacle.origin.x = newPos.x;
+        dragObstacle.origin.y = newPos.y;
+        return;
+      }
+
+      // Die drag
+      if (isDragging && dragDie) {
+        updateMouse(e);
+        raycaster.ray.intersectPlane(viewPlane, dragTarget);
+        const newPos = dragTarget.clone().sub(dragOffset);
+        dragVelocity.copy(newPos).sub(lastDragPos).multiplyScalar(60);
+        lastDragPos.copy(newPos);
+        dragDie.body.position.x = newPos.x;
+        dragDie.body.position.y = newPos.y;
+        dragDie.body.position.z = 0;
+        dragDie.body.velocity.set(0, 0, 0);
+        dragDie.body.angularVelocity.set(0, 0, 0);
+        return;
+      }
+
+      // Hover cursor + cancel long press if moved too far
       updateMouse(e);
-      raycaster.ray.intersectPlane(viewPlane, dragTarget);
-
-      const newPos = dragTarget.clone().sub(dragOffset);
-      dragVelocity.copy(newPos).sub(lastDragPos).multiplyScalar(60);
-      lastDragPos.copy(newPos);
-
-      // Move die in XY, keep Z centered in channel
-      dragDie.body.position.x = newPos.x;
-      dragDie.body.position.y = newPos.y;
-      dragDie.body.position.z = 0;
-      dragDie.body.velocity.set(0, 0, 0);
-      dragDie.body.angularVelocity.set(0, 0, 0);
+      if (longPressTimer && longPressScreenPos) {
+        const dx = e.clientX - longPressScreenPos.x;
+        const dy = e.clientY - longPressScreenPos.y;
+        if (dx * dx + dy * dy > 225) cancelLongPress(); // 15px threshold
+      }
+      const hit = raycastDice() || raycastObstacles();
+      canvas.style.cursor = hit ? 'grab' : 'default';
     });
 
     canvas.addEventListener('pointerup', function (e) {
-      if (!isDragging || !dragDie) return;
+      cancelLongPress();
 
-      const throwScale = 0.8;
-      dragDie.body.velocity.set(
-        dragVelocity.x * throwScale,
-        dragVelocity.y * throwScale,
-        (Math.random() - 0.5) * 2
-      );
-
-      const speed = dragVelocity.length();
-      if (speed > 1) {
-        dragDie.body.angularVelocity.set(
-          (Math.random() - 0.5) * speed * 3,
-          (Math.random() - 0.5) * speed * 2,
-          (Math.random() - 0.5) * speed * 3
-        );
+      // Obstacle release
+      if (isDraggingObstacle && dragObstacle) {
+        const speed = obstDragVelocity.length();
+        if (speed > FLING_REMOVE_SPEED) {
+          // Fling off screen → remove
+          const obs = dragObstacle;
+          if (typeof gsap !== 'undefined') {
+            const dir = obstDragVelocity.clone().normalize();
+            gsap.to(obs.mesh.position, {
+              x: obs.mesh.position.x + dir.x * 30,
+              y: obs.mesh.position.y + dir.y * 30,
+              duration: 0.4, ease: 'power2.in',
+              onComplete: () => removeObstacle(obs)
+            });
+            gsap.to(obs.mesh.scale, { x: 0.01, y: 0.01, z: 0.01, duration: 0.4 });
+            // Detach body immediately so it doesn't interact
+            world.removeBody(obs.body);
+          } else {
+            removeObstacle(obs);
+          }
+        } else {
+          // Place it where it was dropped
+          dragObstacle.dragging = false;
+          // Restore static type for static obstacles
+          if (dragObstacle.type === 'peg' || dragObstacle.type === 'pig') {
+            dragObstacle.body.type = CANNON.Body.STATIC;
+            dragObstacle.body.updateMassProperties();
+          }
+        }
+        isDraggingObstacle = false; dragObstacle = null;
+        canvas.style.cursor = 'default';
+        canvas.releasePointerCapture(e.pointerId);
+        return;
       }
 
-      dragDie.settled = false;
-      dragDie.settleFrames = 0;
-
-      if (dragDie.selected && selectedDice.length > 1) {
-        fanOutThrow(dragDie, dragVelocity);
+      // Die release
+      if (isDragging && dragDie) {
+        const throwScale = 0.8;
+        dragDie.body.velocity.set(dragVelocity.x * throwScale, dragVelocity.y * throwScale, (Math.random() - 0.5) * 2);
+        const speed = dragVelocity.length();
+        if (speed > 1) {
+          dragDie.body.angularVelocity.set(
+            (Math.random() - 0.5) * speed * 3, (Math.random() - 0.5) * speed * 2, (Math.random() - 0.5) * speed * 3);
+        }
+        dragDie.settled = false; dragDie.settleFrames = 0;
+        if (dragDie.selected && selectedDice.length > 1) fanOutThrow(dragDie, dragVelocity);
+        isDragging = false; dragDie = null;
+        canvas.style.cursor = 'default'; canvas.releasePointerCapture(e.pointerId);
       }
-
-      isDragging = false;
-      dragDie = null;
-      canvas.style.cursor = 'default';
-      canvas.releasePointerCapture(e.pointerId);
     });
   }
 
@@ -931,18 +1102,8 @@ const DiceEngine = (function () {
     const fixedTimeStep = 1 / 60;
 
     function loop() {
-      // Rotate propeller before physics step
-      if (propellerBody) {
-        propellerAngle += propellerSpeed * fixedTimeStep;
-        propellerBody.quaternion.setFromEuler(0, 0, propellerAngle);
-      }
-
+      updateObstacleBehaviors(fixedTimeStep);
       world.step(fixedTimeStep);
-
-      // Sync propeller visual
-      if (propellerGroup) {
-        propellerGroup.rotation.z = propellerAngle;
-      }
 
       for (let i = 0; i < dice.length; i++) {
         const die = dice[i];
@@ -1024,8 +1185,6 @@ const DiceEngine = (function () {
     camera.updateProjectionMatrix();
     renderer.setSize(rect.width, rect.height);
     buildWalls();
-    buildBumpers();
-    buildPropeller();
   }
 
   // ── Remove all dice and spawn N new ones ──
@@ -1092,8 +1251,6 @@ const DiceEngine = (function () {
     camera.position.z = 22 * level;
     camera.updateProjectionMatrix();
     buildWalls();
-    buildBumpers();
-    buildPropeller();
   }
 
   function getZoom() {
